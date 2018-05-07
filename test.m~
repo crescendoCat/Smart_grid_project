@@ -72,7 +72,7 @@ buy_edges = buy_price_lb:1:buy_price_ub;
 user_action_num = size(buy_edges,2) - 1;
 
 % Discretize the demand state space => supply
-supply_ub = 500;
+supply_ub = 400;
 supply_lb = 0;
 supply_state_edges = supply_lb:10:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
@@ -127,7 +127,7 @@ for day = 1:size(plants_day_dir, 1)-2
                 end
             else
                 quoted_price = discretize(rand(1, plant_num)*7+2, quoted_edges);
-                buy_price = discretize(rand(1, buy_num)*5+2, buy_edges);
+                buy_price = discretize(rand(1, plant_num)*5+2, buy_edges);
             end
             f = [-1 * buy_price quoted_price];
             b = [total_power_dem(compute_time, :) plants_data(compute_time, :)];
@@ -138,11 +138,10 @@ for day = 1:size(plants_day_dir, 1)-2
             eve_x_log = [eve_x_log meanPrice];
             if use_RL
                 supplier_benefit_RL = [supplier_benefit_RL sum(quoted_price*x(2:plant_num+buy_num))];
-                usr_benefit_RL = [usr_benefit_RL sum(buy_price*x(1:buy_num))];
+                usr_benefit_RL = [usr_benefit_RL sum(buy_price*x)]
                 actual_supply_RL = [actual_supply_RL sum(x(2:plant_num+buy_num))];
             else
                 supplier_benefit_Random = [supplier_benefit_Random sum(quoted_price*x(2:plant_num+buy_num))];
-                usr_benefit_Random = [usr_benefit_Random sum(buy_price*x(1:buy_num))];
                 actual_supply_Random = [actual_supply_Random sum(x(2:plant_num+buy_num))];
                 demand = [demand total_power_dem(compute_time, :)];
             end
@@ -165,18 +164,6 @@ title('Supplier benefit comparison');
 ylabel('Total $');
 xlabel('Time');
 saveas(gcf, strcat(output_dir, 'Supplier benefit.jpg'));
-
-% Plot user benefits
-figure();
-plot(7:1:18, usr_benefit_RL, '-o');
-hold on;
-plot(7:1:18, usr_benefit_Random, '-o');
-hold off
-legend('RL', 'Random');
-title('User benefit comparison');
-ylabel('Total $');
-xlabel('Time');
-saveas(gcf, strcat(output_dir, 'User benefit.jpg'));
 
 % Plot demand and supply balance
 figure();
