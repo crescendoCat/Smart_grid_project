@@ -89,7 +89,7 @@ supply_state_num = size(supply_state_edges,2) - 1;
 % Maintain a Q-factor for R-SMART learning
 sup_Q_factor = rand(plant_num, demand_state_num, supply_action_num);
 usr_Q_factor = rand(buy_num, supply_state_num, user_action_num);
-learning_rate = 0.1;
+learning_rate = 10;
 eta = 0.99;
 iteration = 20;
 

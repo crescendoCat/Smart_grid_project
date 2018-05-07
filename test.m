@@ -1,4 +1,4 @@
-% This is file that test our supplier agent
+% This is file that test our supplier and demander agent
 % Author: Chan-Wei Hu
 %=========================================================================
 
@@ -148,7 +148,8 @@ for day = 1:size(plants_day_dir, 1)-2
             end
 
             %disp(sum(quoted_price*x(2:plant_num+buy_num)));
-            %fig_drawer(plants_data(compute_time, :), quoted_price, x(1), compute_time);
+            fig_drawer(plants_data(compute_time, :), quoted_price, x(1), ...
+                total_power_dem(compute_time, :), compute_time);
         end
         if use_RL
             disp('Supplier RL average');
