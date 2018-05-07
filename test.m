@@ -150,7 +150,17 @@ for day = 1:size(plants_day_dir, 1)-2
             %disp(sum(quoted_price*x(2:plant_num+buy_num)));
             %fig_drawer(plants_data(compute_time, :), quoted_price, x(1), compute_time);
         end
-
+        if use_RL
+            disp('Supplier RL average');
+            disp(mean(supplier_benefit_RL));
+            disp('User RL average');
+            disp(mean(usr_benefit_RL));
+        else
+            disp('Supplier Random average');
+            disp(mean(supplier_benefit_Random));
+            disp('User Random average');
+            disp(mean(usr_benefit_Random));
+        end
     end
 end
 output_dir = 'Result/';
