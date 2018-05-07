@@ -4,6 +4,7 @@
 
 clear all; 
 close all;
+warning off;
 plants_name_dir = dir('Supplier/test/');
 plants_name_list = {};
 for i=3:size(plants_name_dir, 1)
@@ -36,7 +37,7 @@ title('Total power demand');
 xlabel('Time (hour)');
 %}
 
-quoted_price = rand(1, plant_num)*7+2;
+quoted_price = zeros(1, plant_num);
 buy_price = 5;
 % Using RL method 
 % Discretize the action space => quoted_price
@@ -52,16 +53,6 @@ demand_lowerbound = 0;
 state_edges = demand_lowerbound:1:demand_upperbound;
 state_num = size(state_edges,2) - 1;
 demand_state = discretize(total_power_dem, state_edges);
-
-% Maintain a Q-factor for R-SMART learning
-Q_factor = rand(plant_num, state_num, action_num);
-learning_rate = 10;
-eta = 0.99;
-iteration = 100;
-
-use_RL_ask = 'test RL or Random? (true: RL, false: Random)\n';
-use_RL = input(use_RL_ask);
-
     
 %{
 figure();
@@ -72,6 +63,7 @@ end
 legend(plants_name_list);
 hold off;
 %}
+
 fval_log = [];
 eve_x_log = [];
 
@@ -86,72 +78,75 @@ load('Q_factor_table.mat', 'Q_factor');
 A = eye(plant_num+buy_num);
 Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
-supplier_benefit = [];
+supplier_benefit_RL = [];
+supplier_benefit_Random = [];
 demand = [];
-actual_supply = [];
-for compute_time = 7:18
-    if use_RL 
-        % Get current state
-        current_state = discretize(total_power_dem(compute_time, :), state_edges);
-        for i = 1:plant_num
-            % Get the index of the max Q-value in current state, that is
-            % the price to quote
-            [~, quoted_price(i)] = max(Q_factor(i, current_state, :));
+actual_supply_RL = [];
+actual_supply_Random = [];
+for use_RL = 0:1
+    for compute_time = 7:18
+        if use_RL 
+            % Get current state
+            current_state = discretize(total_power_dem(compute_time, :), state_edges);
+            for i = 1:plant_num
+                % Get the index of the max Q-value in current state, that is
+                % the price to quote
+                [~, quoted_price(i)] = max(Q_factor(i, current_state, :));
+            end
+        else
+            quoted_price = discretize(rand(1, plant_num)*7+2, edges);
         end
-    else
-        quoted_price = discretize(rand(1, plant_num)*7+2, edges);
+        f = [-1 * buy_price quoted_price];
+        b = [total_power_dem(compute_time, :) plants_data_base(compute_time, :)];
+
+        [x, fval, exitflag, output] = linprog(f, A, b, Aeq, beq, zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num));
+        fval_log = [fval_log -fval];
+        meanPrice = mean(x(2:plant_num + buy_num ));
+        eve_x_log = [eve_x_log meanPrice];
+        if use_RL
+            supplier_benefit_RL = [supplier_benefit_RL sum(quoted_price*x(2:plant_num+buy_num))];
+            actual_supply_RL = [actual_supply_RL sum(x(2:plant_num+buy_num))];
+        else
+            supplier_benefit_Random = [supplier_benefit_Random sum(quoted_price*x(2:plant_num+buy_num))];
+            actual_supply_Random = [actual_supply_Random sum(x(2:plant_num+buy_num))];
+            demand = [demand total_power_dem(compute_time, :)];
+        end
+        
+        
+        %disp(sum(quoted_price*x(2:plant_num+buy_num)));
+        %fig_drawer(plants_data_base(compute_time, :), quoted_price, x(1), compute_time);
     end
-    f = [-1 * buy_price quoted_price];
-    b = [total_power_dem(compute_time, :) plants_data_base(compute_time, :)];
 
-    [x, fval, exitflag, output] = linprog(f, A, b, Aeq, beq, zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num));
-    fval_log = [fval_log -fval];
-    meanPrice = mean(x(2:plant_num + buy_num ));
-    eve_x_log = [eve_x_log meanPrice];
-    supplier_benefit = [supplier_benefit sum(quoted_price*x(2:plant_num+buy_num))];
-    demand = [demand total_power_dem(compute_time, :)];
-    actual_supply = [actual_supply sum(x(2:plant_num+buy_num))];
-    %disp(sum(quoted_price*x(2:plant_num+buy_num)));
-    %fig_drawer(plants_data_base(compute_time, :), quoted_price, x(1), compute_time);
 end
-
 
 output_dir = 'Result/';
 % Plot supplier benefits
 figure();
-plot(7:1:18, supplier_benefit);
-if use_RL
-    title('Supplier benefit: Use RL');
-else
-    title('Supplier benefit: Random');
-end
+plot(7:1:18, supplier_benefit_RL);
+hold on;
+plot(7:1:18, supplier_benefit_Random);
+hold off
+legend('RL', 'Random');
+title('Supplier benefit comparison');
 ylabel('Total $');
 xlabel('Time');
-if use_RL
-    saveas(gcf, strcat(output_dir, 'Supplier benefit-Use RL.png'));
-else
-    saveas(gcf, strcat(output_dir, 'Supplier benefit-Random.png'));
-end
+saveas(gcf, strcat(output_dir, 'Supplier benefit.jpg'));
+
 
 % Plot demand and supply balance
 figure();
 plot(7:1:18, demand);
 hold on; 
-plot(7:1:18, actual_supply); 
+plot(7:1:18, actual_supply_RL); 
+hold on;
+plot(7:1:18, actual_supply_Random); 
 hold off
-legend('demand', 'actual supply');
-if use_RL
-    title('Demand vs Supply: Use RL');
-else
-    title('Demand vs Supply: Random');
-end
+legend('demand', 'actual supply RL', 'actual supply Random');
+title('Demand vs Supply');
 ylabel('kW');
 xlabel('Time');
-if use_RL 
-    saveas(gcf, strcat(output_dir, 'Demand vs Supply-Use RL.png'));
-else
-    saveas(gcf, strcat(output_dir, 'Demand vs Supply-Random.png'));
-end
+saveas(gcf, strcat(output_dir, 'Demand vs Supply.jpg'));
+
 
 %figure();
 %plot(fval_log);
