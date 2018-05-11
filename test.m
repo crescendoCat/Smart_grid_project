@@ -12,8 +12,8 @@ for i=3:size(plants_day_dir, 1)
     plants_day_list = [plants_day_list; strcat('Supplier/test/', plants_day_dir(i).name)];
 end
 
-day_num = 10;
-plants_data_base = zeros(day_num, 24, 15);
+day_num = length(plants_day_list);
+plants_data_base = zeros(day_num, 24, 19);
 %for i=1:size(plants_day_list)
 for i = 1:day_num
     if i <= size(plants_day_list)
@@ -92,7 +92,7 @@ user_action_num = size(buy_edges,2) - 1;
 % Discretize the demand state space => supply
 supply_ub = 50;
 supply_lb = 0;
-supply_state_edges = supply_lb:5:supply_ub;
+supply_state_edges = supply_lb:1:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
     
@@ -146,12 +146,14 @@ for day = 1:day_num
                     % Get the index of the max Q-value in current state, that is
                     % the price to quote
                     [~, quoted_price(i)] = max(sup_Q_factor(i, sup_cur_state(i), :));
+                    quoted_price(i) = quoted_price(i)+1;
                 end
                 % Get user current state
                 %usr_cur_state = discretize(sum(plants_data(compute_time, :)), supply_state_edges);
                 usr_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
                 for i = 1:buy_num
                     [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur_state, :)); 
+                    buy_price(i) = buy_price(i)+1;
                 end
             else
                 quoted_price = discretize(rand(1, plant_num)*7+2, quoted_edges);
@@ -270,4 +272,3 @@ title('Demand vs Supply');
 ylabel('kW');
 xlabel('Time');
 %saveas(gcf, strcat(output_dir, 'Demand vs Supply.jpg'));
-

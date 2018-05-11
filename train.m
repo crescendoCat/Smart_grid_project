@@ -14,8 +14,8 @@ for i=3:size(plants_day_dir, 1)
     plants_day_list = [plants_day_list; strcat('Supplier/train/', plants_day_dir(i).name)];
 end
 
-plants_data_base = zeros(4, 24, 15);
-for i=1:size(plants_day_list)
+plants_data_base = zeros(length(plants_day_list), 24, 19);
+for i=1:length(plants_day_list)
     plants_name_list = {};
     plant_data_dir = dir(char(plants_day_list(i)));
     for j=3:size(plant_data_dir, 1)
@@ -66,7 +66,7 @@ buy_price = rand(1, buy_num)*5+2;
 quoted_price_ub = 9;
 quoted_price_lb = 2;
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
-supply_action_num = size(quoted_edges,2) - 1;
+supply_action_num = size(quoted_edges,2);
 
 % Discretize the supply state space => demand 
 demand_ub = 50;
@@ -79,20 +79,20 @@ demand_state_num = size(demand_state_edges,2) - 1;
 buy_price_ub = 9;
 buy_price_lb = 2;
 buy_edges = buy_price_lb:1:buy_price_ub;
-user_action_num = size(buy_edges,2) - 1;
+user_action_num = size(buy_edges,2);
 
 % Discretize the demand state space => supply
 supply_ub = 50;
 supply_lb = 0;
-supply_state_edges = supply_lb:5:supply_ub;
+supply_state_edges = supply_lb:1:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
 % Maintain a Q-factor for R-SMART learning
 sup_Q_factor = zeros(plant_num, demand_state_num, supply_action_num);
 usr_Q_factor = zeros(buy_num, supply_state_num, user_action_num);
-learning_rate = 0.1;
+learning_rate = 0.01;
 eta = 0.99;
-iteration = 30;
+iteration = 50;
 
 %{
 figure();
@@ -119,17 +119,10 @@ for day = 1:size(plants_day_dir, 1)-2
         %sup_cur_state = discretize(sum(plants_data(compute_time, :)), supply_state_edges);
         sup_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
         for iter_ = 1:iteration
-            % Find the best action for supplier
-            for i = 1:plant_num
-                % Get the index of the max Q-value in current state, that is
-                % the price to quote
-                [~, quoted_price(i)] = max(sup_Q_factor(i, dem_cur_state(i), :));
-            end
-            % Find the best action for user
-            for i = 1:buy_num
-                [~, buy_price(i)] = max(usr_Q_factor(i, sup_cur_state, :));
-            end
-            
+            % Exploration
+            quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
+            buy_price = randi([buy_price_lb buy_price_ub], 1, buy_num);
+           
             % Start evaluating 
             f = [-1 * buy_price quoted_price];
             b = [power_dem(compute_time, :) plants_data(compute_time, :)];
@@ -137,27 +130,26 @@ for day = 1:size(plants_day_dir, 1)-2
                 zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num));
             
             % Update the reward of supplier
-            for j = 1:plant_num
-                [~, quote_p] = max(sup_Q_factor(j, dem_cur_state(i), :));       
-                immi_reward = (x(j+1)/plants_data(compute_time, j))*(quote_p/quoted_price_ub);
+            for j = 1:plant_num    
+                immi_reward = (x(j+1)/(plants_data(compute_time, j)+0.00001))*(quoted_price(j)/quoted_price_ub);
+                % Get quoted price -> action num
+                quoted_p = quoted_price(j) - 1;
                 % Update supply Q-factor
-                sup_Q_factor(j,dem_cur_state(i),quote_p) = (1-learning_rate)*sup_Q_factor(j, dem_cur_state(i), quote_p)+ ...
+                sup_Q_factor(j,dem_cur_state(i),quoted_p) = (1-learning_rate)*sup_Q_factor(j, dem_cur_state(i), quoted_p)+ ...
                     learning_rate*(immi_reward + eta*(max(sup_Q_factor(j,dem_cur_state(i),:))));
             end
             % Update the reward of user
             for j = 1:buy_num
-                [~, buy_p] = max(usr_Q_factor(j, sup_cur_state, :)); 
-                immi_reward = (x(j)/power_dem(compute_time, j))*(1-(buy_p/buy_price_ub));
+                immi_reward = (x(j)/power_dem(compute_time, j))*(1-(buy_price(j)/buy_price_ub));
+                % Get quoted price -> action num
+                buy_p = buy_price(j) - 1;
                 % Update user Q-factor
                 usr_Q_factor(j,sup_cur_state,buy_p) = (1-learning_rate)*usr_Q_factor(j, sup_cur_state,buy_p)+ ...
                     learning_rate*(immi_reward+ eta*(max(usr_Q_factor(j,sup_cur_state,:))));
             end
-            
-            % Refresh current state
-            sup_cur_state = discretize(x(1), supply_state_edges);
-            dem_cur_state = discretize(x(buy_num+1:plant_num + buy_num), demand_state_edges);
         end
     end
 end
+
 save('sup_Q_factor.mat', 'sup_Q_factor');
 save('usr_Q_factor.mat', 'usr_Q_factor');
