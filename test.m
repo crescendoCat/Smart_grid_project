@@ -206,6 +206,8 @@ for day = 1:day_num
     end
 end
 
+output_dir = 'Result/';
+
 % Plot supplier average benefit of RL vs Random 
 figure();
 plot(1:1:day_num,  mean_sup_benefit_RL, '-o');
@@ -216,7 +218,7 @@ legend('RL', 'Random');
 title('Average supplier benefit comparison');
 ylabel('Total $');
 xlabel('Day');
-%saveas(gcf, strcat(output_dir, 'Supplier benefit.jpg'));
+%saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
 
 % Plot supplier average benefit of RL vs Random 
 figure();
@@ -228,10 +230,9 @@ legend('RL', 'Random');
 title('Average user benefit comparison');
 ylabel('Total $');
 xlabel('Day');
-%saveas(gcf, strcat(output_dir, 'Supplier benefit.jpg'));
+%saveas(gcf, strcat(output_dir, 'Average_user_benefit.jpg'));
 
 %{
-output_dir = 'Result/';
 % Plot supplier benefits
 figure();
 plot(7:1:18, supplier_benefit_RL, '-o');
@@ -255,18 +256,18 @@ title('User benefit comparison');
 ylabel('Total $');
 xlabel('Time');
 saveas(gcf, strcat(output_dir, 'User benefit.jpg'));
-
+%}
 % Plot demand and supply balance
 figure();
-plot(7:1:18, demand, '-o');
+plot(7:1:18, demand(109:120), '-o');
 hold on; 
-plot(7:1:18, actual_supply_RL, '-o'); 
+plot(7:1:18, actual_supply_RL(109:120), '-o'); 
 hold on;
-plot(7:1:18, actual_supply_Random, '-o'); 
+plot(7:1:18, actual_supply_Random(109:120), '-o'); 
 hold off
 legend('demand', 'actual supply RL', 'actual supply Random');
 title('Demand vs Supply');
 ylabel('kW');
 xlabel('Time');
-saveas(gcf, strcat(output_dir, 'Demand vs Supply.jpg'));
-%}
+%saveas(gcf, strcat(output_dir, 'Demand vs Supply.jpg'));
+
