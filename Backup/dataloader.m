@@ -1,14 +1,11 @@
 function [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
             = dataloader(DATA_PATH)
-% Description:
-%   This is function for loading data from Supplier and User.
-%   Author: Chan-Wei Hu
+% This is function for loading data from Supplier and User
+% Author: Chan-Wei Hu
 %=========================================================================
-
 plants_day_dir = dir(DATA_PATH);
 plants_day_list = {};
 day_num = size(plants_day_dir, 1)-2;
-
 for i=3:size(plants_day_dir, 1)
     plants_day_list = [plants_day_list; strcat(DATA_PATH, plants_day_dir(i).name)];
 end
@@ -49,6 +46,14 @@ for other=2:day_num
     random_int = 10*rand(1)+20;
     total_power_dem(other,:,:)=total_power_day1' * random_int / 1000;
 end
+
+%{
+figure();
+h = plot(total_power_dem);
+title('Total power demand');
+xlabel('Time (hour)');
+%}
+
 end
 
 

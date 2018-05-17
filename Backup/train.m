@@ -48,12 +48,22 @@ learning_rate = 0.01;
 eta = 0.99;
 iteration = 10;
 
+%{
+figure();
+for i=1:plant_num
+    plot(plants_data_base(3, :, i));
+    hold on
+end
+legend(plants_name_list);
+hold off;
+%}
+
 A = eye(plant_num+buy_num);
 Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
 
 % Start training
-for day = 1:day_num
+for day = 1:size(plants_day_dir, 1)-2
     plants_data = squeeze(plants_data_base(day,:,:));
     % NOTE: should change power_dem shape if you have multiple users
     power_dem = squeeze(total_power_dem(day,:,:))';
@@ -79,8 +89,8 @@ for day = 1:day_num
                 % Get quoted price -> action num
                 quoted_p = quoted_price(j) - 1;
                 % Update supply Q-factor
-                sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-learning_rate)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
-                    learning_rate*(immi_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
+                sup_Q_factor(j,dem_cur_state(i),quoted_p) = (1-learning_rate)*sup_Q_factor(j, dem_cur_state(i), quoted_p)+ ...
+                    learning_rate*(immi_reward + eta*(max(sup_Q_factor(j,dem_cur_state(i),:))));
             end
             % Update the reward of user
             for j = 1:buy_num
@@ -95,6 +105,5 @@ for day = 1:day_num
     end
 end
 
-% Save the model
 save('sup_Q_factor.mat', 'sup_Q_factor');
 save('usr_Q_factor.mat', 'usr_Q_factor');

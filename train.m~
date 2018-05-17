@@ -95,6 +95,5 @@ for day = 1:day_num
     end
 end
 
-% Save the model
 save('sup_Q_factor.mat', 'sup_Q_factor');
 save('usr_Q_factor.mat', 'usr_Q_factor');
