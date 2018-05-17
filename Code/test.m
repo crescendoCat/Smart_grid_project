@@ -5,7 +5,7 @@
 clear all; 
 close all;
 warning off;
-DATA_PATH = 'Supplier/test/';
+DATA_PATH = '../Data/Supplier/test/';
 
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
     = dataloader(DATA_PATH);
@@ -54,21 +54,13 @@ Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
 
 % Define a data structure for plotting the result
-Result = struct('sup_benefit_RL', [], 'sup_benefit_Rand', [], mean_sup_benefit_RL, [],
-                '', []);
-%Result.sup_benefit_RL = [];
-%supplier_benefit_Random = [];
-mean_sup_benefit_RL = [];
-mean_sup_benefit_Random = [];
+Result = struct('sup_benefit_RL', [], 'sup_benefit_Random', [], ...
+                'mean_sup_benefit_RL', [], 'mean_sup_benefit_Random', [], ...
+                'usr_benefit_RL', [], 'usr_benefit_Random', [], ...
+                'mean_usr_benefit_RL', [], 'mean_usr_benefit_Random', [], ...
+                'actual_supply_RL', [], 'actual_supply_Random', [], ...
+                'demand', []);
 
-usr_benefit_RL = [];
-usr_benefit_Random = [];
-mean_usr_benefit_RL = [];
-mean_usr_benefit_Random = [];
-
-demand = [];
-actual_supply_RL = [];
-actual_supply_Random = [];
 for day = 1:day_num
     plants_data = squeeze(plants_data_base(day, :, :));
     % NOTE: should change power_dem shape if you have multiple users
@@ -105,87 +97,26 @@ for day = 1:day_num
             if use_RL
                 Result.sup_benefit_RL = [Result.sup_benefit_RL sum(quoted_price*x(2:plant_num+buy_num))];              
                 usr_demand_rate = x(1:buy_num)/power_dem(compute_time, :);
-                usr_benefit_RL = [usr_benefit_RL sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
-                actual_supply_RL = [actual_supply_RL sum(x(2:plant_num+buy_num))];
+                Result.usr_benefit_RL = [Result.usr_benefit_RL sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
+                Result.actual_supply_RL = [Result.actual_supply_RL sum(x(2:plant_num+buy_num))];
             else
                 Result.sup_benefit_Random = [Result.sup_benefit_Random sum(quoted_price*x(2:plant_num+buy_num))];
                 usr_demand_rate = x(1:buy_num)/power_dem(compute_time, :);
-                usr_benefit_Random = [usr_benefit_Random sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
-                actual_supply_Random = [actual_supply_Random sum(x(2:plant_num+buy_num))];
-                demand = [demand power_dem(compute_time, :)];
+                Result.usr_benefit_Random = [Result.usr_benefit_Random sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
+                Result.actual_supply_Random = [Result.actual_supply_Random sum(x(2:plant_num+buy_num))];
+                Result.demand = [Result.demand power_dem(compute_time, :)];
             end
         end
         if use_RL
-            mean_sup_benefit_RL = [mean_sup_benefit_RL mean(supplier_benefit_RL((day-1)*12+1:day*12))];
-            mean_usr_benefit_RL = [mean_usr_benefit_RL mean(usr_benefit_RL((day-1)*12+1:day*12))];
+            Result.mean_sup_benefit_RL = [Result.mean_sup_benefit_RL mean(Result.sup_benefit_RL((day-1)*12+1:day*12))];
+            Result.mean_usr_benefit_RL = [Result.mean_usr_benefit_RL mean(Result.usr_benefit_RL((day-1)*12+1:day*12))];
         else
-            mean_sup_benefit_Random = [mean_sup_benefit_Random mean(supplier_benefit_Random((day-1)*12+1:day*12))];
-            mean_usr_benefit_Random = [mean_usr_benefit_Random mean(usr_benefit_Random((day-1)*12+1:day*12))];
+            Result.mean_sup_benefit_Random = [Result.mean_sup_benefit_Random mean(Result.sup_benefit_Random((day-1)*12+1:day*12))];
+            Result.mean_usr_benefit_Random = [Result.mean_usr_benefit_Random mean(Result.usr_benefit_Random((day-1)*12+1:day*12))];
         end
     end
 end
 
-output_dir = 'Result/';
+% Draw the result
+draw_result(Result, day_num);
 
-% Plot supplier average benefit of RL vs Random 
-figure();
-plot(1:1:day_num,  mean_sup_benefit_RL, '-o');
-hold on;
-plot(1:1:day_num,  mean_sup_benefit_Random, '-o');
-hold off
-legend('RL', 'Random');
-title('Average supplier benefit comparison');
-ylabel('Total $');
-xlabel('Day');
-%saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
-
-% Plot supplier average benefit of RL vs Random 
-figure();
-plot(1:1:day_num,  mean_usr_benefit_RL, '-o');
-hold on;
-plot(1:1:day_num,  mean_usr_benefit_Random, '-o');
-hold off
-legend('RL', 'Random');
-title('Average user benefit comparison');
-ylabel('Total $');
-xlabel('Day');
-%saveas(gcf, strcat(output_dir, 'Average_user_benefit.jpg'));
-
-%{
-% Plot supplier benefits
-figure();
-plot(7:1:18, supplier_benefit_RL, '-o');
-hold on;
-plot(7:1:18, supplier_benefit_Random, '-o');
-hold off
-legend('RL', 'Random');
-title('Supplier benefit comparison');
-ylabel('Total $');
-xlabel('Time');
-saveas(gcf, strcat(output_dir, 'Supplier benefit.jpg'));
-
-% Plot user benefits
-figure();
-plot(7:1:18, usr_benefit_RL, '-o');
-hold on;
-plot(7:1:18, usr_benefit_Random, '-o');
-hold off
-legend('RL', 'Random');
-title('User benefit comparison');
-ylabel('Total $');
-xlabel('Time');
-saveas(gcf, strcat(output_dir, 'User benefit.jpg'));
-%}
-% Plot demand and supply balance
-figure();
-plot(7:1:18, demand(109:120), '-o');
-hold on; 
-plot(7:1:18, actual_supply_RL(109:120), '-o'); 
-hold on;
-plot(7:1:18, actual_supply_Random(109:120), '-o'); 
-hold off
-legend('demand', 'actual supply RL', 'actual supply Random');
-title('Demand vs Supply');
-ylabel('kW');
-xlabel('Time');
-%saveas(gcf, strcat(output_dir, 'Demand vs Supply.jpg'));

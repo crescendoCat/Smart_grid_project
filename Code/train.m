@@ -6,7 +6,7 @@ close all;
 warning off;
 
 % Define the path of training data 
-DATA_PATH = 'Supplier/train/';
+DATA_PATH = '../Data/Supplier/train/';
 
 % Load the data
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
@@ -95,5 +95,6 @@ for day = 1:day_num
     end
 end
 
+% Save the model
 save('sup_Q_factor.mat', 'sup_Q_factor');
 save('usr_Q_factor.mat', 'usr_Q_factor');
