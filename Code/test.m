@@ -1,10 +1,11 @@
 % This is file that test our supplier and demander agent
 % Author: Chan-Wei Hu
 %=========================================================================
-
 clear all; 
 close all;
 warning off;
+
+% Define the test data path
 DATA_PATH = '../Data/Supplier/test/';
 
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
@@ -18,7 +19,7 @@ buy_price = rand(1, buy_num)*5;
 quoted_price_ub = 9;
 quoted_price_lb = 2;
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
-supply_action_num = size(quoted_edges,2) - 1;
+supply_action_num = size(quoted_edges,2);
 
 % Discretize the supply state space => demand 
 demand_ub = 50;
@@ -31,7 +32,7 @@ demand_state_num = size(demand_state_edges,2) - 1;
 buy_price_ub = 9;
 buy_price_lb = 2;
 buy_edges = buy_price_lb:1:buy_price_ub;
-user_action_num = size(buy_edges,2) - 1;
+user_action_num = size(buy_edges,2);
 
 % Discretize the demand state space => supply
 supply_ub = 50;
@@ -39,16 +40,13 @@ supply_lb = 0;
 supply_state_edges = supply_lb:1:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
-fval_log = [];
-eve_x_log = [];
-
-A = eye(plant_num+buy_num);
-Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
-beq = 0;
-
-% Start testing
+% Load in the Q-factor table
 load('sup_Q_factor.mat', 'sup_Q_factor');
 load('usr_Q_factor.mat', 'usr_Q_factor');
+
+% Variables for linear programming
+fval_log = [];
+eve_x_log = [];
 A = eye(plant_num+buy_num);
 Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
@@ -77,7 +75,6 @@ for day = 1:day_num
                     quoted_price(i) = quoted_price(i)+1;
                 end
                 % Get user current state
-                %usr_cur_state = discretize(sum(plants_data(compute_time, :)), supply_state_edges);
                 usr_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
                 for i = 1:buy_num
                     [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur_state, :)); 

@@ -41,7 +41,7 @@ supply_lb = 0;
 supply_state_edges = supply_lb:1:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
-% Maintain a Q-factor for R-SMART learning
+% Maintain a Q-factor and setup the parameters for R-SMART learning
 sup_Q_factor = zeros(plant_num, demand_state_num, supply_action_num);
 usr_Q_factor = zeros(buy_num, supply_state_num, user_action_num);
 learning_rate = 0.01;
@@ -59,7 +59,7 @@ for day = 1:day_num
     power_dem = squeeze(total_power_dem(day,:,:))';
     for compute_time = 7:18
         % Convert current demand to discrete state
-        dem_cur_state = discretize(power_dem(compute_time, :), demand_state_edges)*ones(plant_num);
+        dem_cur_state = discretize(power_dem(compute_time, :), demand_state_edges)*ones(plant_num,1);
         %sup_cur_state = discretize(sum(plants_data(compute_time, :)), supply_state_edges);
         sup_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
         for iter_ = 1:iteration

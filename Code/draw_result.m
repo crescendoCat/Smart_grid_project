@@ -12,7 +12,7 @@ plot(1:1:day_num,  Result.mean_sup_benefit_RL, '-o', ...
      1:1:day_num,  Result.mean_sup_benefit_Random, '-x');
 legend('RL', 'Random');
 title('Average supplier benefit comparison');
-ylabel('Benefit Ratio');
+ylabel('Avg $');
 xlabel('Day');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
