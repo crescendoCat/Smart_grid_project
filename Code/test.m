@@ -24,7 +24,7 @@ supply_action_num = size(quoted_edges,2);
 % Discretize the supply state space => demand 
 demand_ub = 200;
 demand_lb = 0;
-demand_state_edges = demand_lb:1:demand_ub;
+demand_state_edges = demand_lb:5:demand_ub;
 demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
@@ -37,7 +37,7 @@ user_action_num = size(buy_edges,2);
 % Discretize the demand state space => supply
 supply_ub = 200;
 supply_lb = 0;
-supply_state_edges = supply_lb:1:supply_ub;
+supply_state_edges = supply_lb:5:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
 % Load in the Q-factor table
@@ -52,16 +52,18 @@ Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
 
 % Define a data structure for plotting the result
-Result = struct('sup_benefit_RL', [], 'sup_benefit_Random', [], ...
-                'mean_sup_benefit_RL', [], 'mean_sup_benefit_Random', [], ...
-                'usr_benefit_RL', [], 'usr_benefit_Random', [], ...
-                'mean_usr_benefit_RL', [], 'mean_usr_benefit_Random', [], ...
-                'actual_supply_RL', [], 'actual_supply_Random', [], ...
-                'demand', []);
-
+Result = struct('actual_supply_RL', [], 'actual_supply_Random', [], ...
+                'sup_price_RL', [], 'usr_price_RL', [], ...
+                'sup_price_Random', [], 'usr_price_Random', [], ...
+                'sup_ideal_supply', plants_data_base(:, 7:18, :), ...
+                'usr_ideal_need', total_power_dem(:, 7:18, :), ...
+                'sup_actual_supply_RL', zeros(day_num, 12, plant_num), ...
+                'usr_actual_get_RL', zeros(day_num, 12, buy_num), ...
+                'sup_actual_supply_Random', zeros(day_num, 12, plant_num), ...
+                'usr_actual_get_Random', zeros(day_num, 12, buy_num));
+start_time = clock;
 for day = 1:day_num
     plants_data = squeeze(plants_data_base(day, :, :));
-    % NOTE: should change power_dem shape if you have multiple users
     power_dem = squeeze(total_power_dem(day, :, :));
     fprintf('==> Testing day: %d\n', day);
     for use_RL = 0:1
@@ -81,39 +83,37 @@ for day = 1:day_num
                     [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur_state(i), :)); 
                     buy_price(i) = buy_price(i)+1;
                 end
+                
+                % Store the price into result
+                Result.sup_price_RL = [Result.sup_price_RL; quoted_price];
+                Result.usr_price_RL = [Result.usr_price_RL; buy_price];                
             else
                 quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
                 buy_price = randi([buy_price_lb buy_price_ub], 1, buy_num);
+                
+                % Store the price into result
+                Result.sup_price_Random = [Result.sup_price_Random; quoted_price];
+                Result.usr_price_Random = [Result.usr_price_Random; buy_price]; 
             end
+            
             f = [-1 * buy_price quoted_price];
             b = [power_dem(compute_time, :) plants_data(compute_time, :)];
 
             [x, fval, exitflag, output] = linprog(f, A, b, Aeq, beq, ...
                 zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num), [], ...
                 optimset('Display','none'));
+            
             if use_RL
-                Result.sup_benefit_RL = [Result.sup_benefit_RL sum(quoted_price*x(buy_num+1:plant_num+buy_num))];              
-                usr_demand_rate = x(1:buy_num)'/power_dem(compute_time, :);
-                Result.usr_benefit_RL = [Result.usr_benefit_RL sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
-                Result.actual_supply_RL = [Result.actual_supply_RL sum(x(buy_num+1:plant_num+buy_num))];
+                Result.sup_actual_supply_RL(day, compute_time-6, :) = x(buy_num+1:plant_num+buy_num);
+                Result.usr_actual_get_RL(day, compute_time-6, :) = x(1:buy_num);
             else
-                Result.sup_benefit_Random = [Result.sup_benefit_Random sum(quoted_price*x(buy_num+1:plant_num+buy_num))];
-                usr_demand_rate = x(1:buy_num)'/power_dem(compute_time, :);
-                Result.usr_benefit_Random = [Result.usr_benefit_Random sum(usr_demand_rate*(1-buy_price/buy_price_ub))];
-                Result.actual_supply_Random = [Result.actual_supply_Random sum(x(buy_num+1:plant_num+buy_num))];
-                Result.demand = [Result.demand sum(power_dem(compute_time, :))];
+                Result.sup_actual_supply_Random(day, compute_time-6, :) = x(buy_num+1:plant_num+buy_num);
+                Result.usr_actual_get_Random(day, compute_time-6, :) = x(1:buy_num);
             end
-        end
-        if use_RL
-            Result.mean_sup_benefit_RL = [Result.mean_sup_benefit_RL mean(Result.sup_benefit_RL((day-1)*12+1:day*12))];
-            Result.mean_usr_benefit_RL = [Result.mean_usr_benefit_RL mean(Result.usr_benefit_RL((day-1)*12+1:day*12))];
-        else
-            Result.mean_sup_benefit_Random = [Result.mean_sup_benefit_Random mean(Result.sup_benefit_Random((day-1)*12+1:day*12))];
-            Result.mean_usr_benefit_Random = [Result.mean_usr_benefit_Random mean(Result.usr_benefit_Random((day-1)*12+1:day*12))];
         end
     end
 end
 
 % Draw the result
 draw_result(Result, day_num);
-
+fprintf('Testing time: %.2f sec\n', etime(clock, start_time));
