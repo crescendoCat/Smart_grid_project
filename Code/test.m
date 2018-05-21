@@ -17,7 +17,7 @@ buy_price = rand(1, buy_num)*5;
 % For supplier
 % Discretize the action space => quoted_price
 quoted_price_ub = 9;
-quoted_price_lb = 2;
+quoted_price_lb = 4;
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
 supply_action_num = size(quoted_edges,2);
 
@@ -29,8 +29,8 @@ demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
 % Discretize the action space => buy_price
-buy_price_ub = 9;
-buy_price_lb = 2;
+buy_price_ub = 7;
+buy_price_lb = 3;
 buy_edges = buy_price_lb:1:buy_price_ub;
 user_action_num = size(buy_edges,2);
 
@@ -75,13 +75,13 @@ for day = 1:day_num
                     % Get the index of the max Q-value in current state, that is
                     % the price to quote
                     [~, quoted_price(i)] = max(sup_Q_factor(i, sup_cur_state(i), :));
-                    quoted_price(i) = quoted_price(i)+1;
+                    quoted_price(i) = quoted_price(i)+quoted_price_lb-1;
                 end
                 % Get user current state
                 usr_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
                 for i = 1:buy_num
                     [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur_state(i), :)); 
-                    buy_price(i) = buy_price(i)+1;
+                    buy_price(i) = buy_price(i)+buy_price_lb-1;
                 end
                 
                 % Store the price into result
@@ -115,5 +115,5 @@ for day = 1:day_num
 end
 
 % Draw the result
-draw_result(Result, day_num);
+draw_result(Result, day_num, 0);
 fprintf('Testing time: %.2f sec\n', etime(clock, start_time));

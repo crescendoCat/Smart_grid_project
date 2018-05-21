@@ -18,7 +18,7 @@ buy_price = rand(1, buy_num)*5+2;
 % For supplier
 % Discretize the action space => quoted_price
 quoted_price_ub = 9;
-quoted_price_lb = 2;
+quoted_price_lb = 4;
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
 supply_action_num = size(quoted_edges,2);
 
@@ -30,8 +30,8 @@ demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
 % Discretize the action space => buy_price
-buy_price_ub = 9;
-buy_price_lb = 2;
+buy_price_ub = 7;
+buy_price_lb = 3;
 buy_edges = buy_price_lb:1:buy_price_ub;
 user_action_num = size(buy_edges,2);
 
@@ -44,10 +44,11 @@ supply_state_num = size(supply_state_edges,2) - 1;
 % Maintain a Q-factor and setup the parameters for R-SMART learning
 sup_Q_factor = zeros(plant_num, demand_state_num, supply_action_num);
 usr_Q_factor = zeros(buy_num, supply_state_num, user_action_num);
-learning_rate = 0.01;
-beta = 0.001;
+% Best: lr = 0.001, beta=0.01
+lr = 0.001;
+beta = 0.01;
 eta = 0.99;
-ITERMAX = 100;
+ITERMAX = 10;
 
 % Total reward and average reward table
 sup_tr = zeros(plant_num, demand_state_num, supply_action_num);
@@ -92,7 +93,7 @@ for day = 1:day_num
                 %immi_reward = (x(j+buy_num)/(plants_data(compute_time, j)+0.00001))*(quoted_price(j)/quoted_price_ub);
                 immi_reward = x(j+buy_num)*quoted_price(j);
                 % Get quoted price -> action num
-                quoted_p = quoted_price(j) - 1;
+                quoted_p = quoted_price(j) - quoted_price_lb + 1;
                 % update total reward
                 sup_tr(j,dem_cur_state(j),quoted_p) = sup_tr(j,dem_cur_state(j),quoted_p) + immi_reward;  
                 % update weight matrix
@@ -102,14 +103,16 @@ for day = 1:day_num
                     + beta*(sup_tr(j,dem_cur_state(j),quoted_p)/sup_weight(j, dem_cur_state(j), quoted_p));
                 avg_reward = sup_ar(j,dem_cur_state(j),quoted_p);
                 % Update supply Q-factor
-                sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-learning_rate)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
-                    learning_rate*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
+                %sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
+                %    lr*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
+                sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
+                    lr*(immi_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
             end
             % Update the reward of user
             for j = 1:buy_num
                 immi_reward = (x(j)/power_dem(compute_time, j))*(1-(buy_price(j)/buy_price_ub));
                 % Get quoted price -> action num
-                buy_p = buy_price(j) - 1;
+                buy_p = buy_price(j) - buy_price_lb + 1;
                 % update total reward
                 usr_tr(j,sup_cur_state(j),buy_p) = usr_tr(j,sup_cur_state(j),buy_p) + immi_reward;  
                 % update weight matrix
@@ -119,8 +122,10 @@ for day = 1:day_num
                     + beta*(usr_tr(j,sup_cur_state(j),buy_p)/usr_weight(j, sup_cur_state(j), buy_p));
                 avg_reward = usr_ar(j,sup_cur_state(j),buy_p);
                 % Update user Q-factor
-                usr_Q_factor(j,sup_cur_state(j),buy_p) = (1-learning_rate)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
-                    learning_rate*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,sup_cur_state(j),:))));
+                %usr_Q_factor(j,sup_cur_state(j),buy_p) = (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
+                %    lr*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,sup_cur_state(j),:))));
+                usr_Q_factor(j,sup_cur_state(j),buy_p) = (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
+                    lr*(immi_reward + eta*(max(usr_Q_factor(j,sup_cur_state(j),:))));
             end
         end
     end
