@@ -115,5 +115,5 @@ for day = 1:day_num
 end
 
 % Draw the result
-draw_result(Result, day_num, 0);
+draw_result(Result, day_num, quoted_price_ub, buy_price_ub, 0);
 fprintf('Testing time: %.2f sec\n', etime(clock, start_time));

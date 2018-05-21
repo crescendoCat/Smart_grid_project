@@ -1,4 +1,4 @@
-function draw_result(Result, day_num, SAVE_FLAG)
+function draw_result(Result, day_num, sup_p_ub, usr_p_ub, SAVE_FLAG)
 % Description:
 %   This is function for plotting the result.
 %   Author: Chan-Wei Hu
@@ -88,17 +88,17 @@ end
 figure();
 sup_RL = squeeze(sum(sum(Result.sup_actual_supply_RL,1)/day_num,3));
 sup_Random = squeeze(sum(sum(Result.sup_actual_supply_Random,1)/day_num,3));
-plot(hour_intv,  sup_RL.*sup_avg_p_RL,  '-o', ...
-       hour_intv,  sup_Random.*sup_avg_p_Random, '-x');
+plot(hour_intv, (sup_RL./sup_ideal).*(sup_avg_p_RL/9),  '-o', ...
+       hour_intv, (sup_Random./sup_ideal).*(sup_avg_p_Random/9), '-x');
 legend('RL', 'Random');
 title('Average supplier benefit comparison');
-ylabel('Avg $');
+ylabel('Benefit Ratio');
 xlabel('Day');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
 end
-hour_avg_RL = sum(sup_RL.*sup_avg_p_RL)/length(hour_intv);
-hour_avg_random = sum(sup_Random.*sup_avg_p_Random)/length(hour_intv);
+hour_avg_RL = sum((sup_RL./sup_ideal).*(sup_avg_p_RL/9))/length(hour_intv);
+hour_avg_random = sum((sup_Random./sup_ideal).*(sup_avg_p_Random/9))/length(hour_intv);
 fprintf('Supplier benefit improves %.2f%% than Random\n', ...
     ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
@@ -107,8 +107,8 @@ figure();
 usr_ideal = squeeze(sum(sum(Result.usr_ideal_need,1)/day_num, 3));
 usr_RL = squeeze(sum(sum(Result.usr_actual_get_RL,1)/day_num,3));
 usr_Random = squeeze(sum(sum(Result.usr_actual_get_Random,1)/day_num,3));
-plot(hour_intv,  (usr_RL./usr_ideal).*(1-usr_avg_p_RL/9), '-o', ...
-       hour_intv,  (usr_Random./usr_ideal).*(1-usr_avg_p_Random/9), '-x');
+plot(hour_intv,  (usr_RL./usr_ideal).*(1-usr_avg_p_RL/sup_p_ub), '-o', ...
+       hour_intv,  (usr_Random./usr_ideal).*(1-usr_avg_p_Random/sup_p_ub), '-x');
 legend('RL', 'Random');
 title('Average user benefit comparison');
 ylabel('Benefit Ratio');
@@ -116,8 +116,8 @@ xlabel('Day');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_user_benefit.jpg'));
 end
-hour_avg_RL = sum((usr_RL./usr_ideal).*(1-usr_avg_p_RL/9))/length(hour_intv);
-hour_avg_random = sum((usr_Random./usr_ideal).*(1-usr_avg_p_Random/9))/length(hour_intv);
+hour_avg_RL = sum((usr_RL./usr_ideal).*(1-usr_avg_p_RL/usr_p_ub))/length(hour_intv);
+hour_avg_random = sum((usr_Random./usr_ideal).*(1-usr_avg_p_Random/usr_p_ub))/length(hour_intv);
 fprintf('User benefit improves %.2f%% than Random\n', ...
     ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
