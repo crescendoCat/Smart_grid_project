@@ -1,4 +1,4 @@
-function draw_result(Result, day_num, sup_p_ub, usr_p_ub, SAVE_FLAG)
+function draw_result(Result, day_num, sup_p_ub, usr_p_ub, usr_p_lb, SAVE_FLAG)
 % Description:
 %   This is function for plotting the result.
 %   Author: Chan-Wei Hu
@@ -88,12 +88,16 @@ end
 figure();
 sup_RL = squeeze(sum(sum(Result.sup_actual_supply_RL,1)/day_num,3));
 sup_Random = squeeze(sum(sum(Result.sup_actual_supply_Random,1)/day_num,3));
-plot(hour_intv, (sup_RL./sup_ideal).*(sup_avg_p_RL/9),  '-o', ...
-       hour_intv, (sup_Random./sup_ideal).*(sup_avg_p_Random/9), '-x');
+RL_percentage = ((sup_RL./ideal_need).*(sup_avg_p_RL/sup_p_ub));
+Random_percentage = ((sup_Random./ideal_need).*(1-sup_avg_p_Random/sup_p_ub));
+%plot(hour_intv, (sup_RL./sup_ideal).*(sup_avg_p_RL/sup_p_ub),  '-o', ...
+%       hour_intv, (sup_Random./sup_ideal).*(sup_avg_p_Random/sup_p_ub), '-x');
+plot(hour_intv, RL_percentage*100,  '-o', ...
+       hour_intv, Random_percentage*100, '-x');
 legend('RL', 'Random');
-title('Average supplier benefit comparison');
-ylabel('Benefit Ratio');
-xlabel('Day');
+title('Average supplier benefit comparison (In percentage)');
+ylabel('%');
+xlabel('Hour');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
 end
@@ -102,17 +106,23 @@ hour_avg_random = sum((sup_Random./sup_ideal).*(sup_avg_p_Random/9))/length(hour
 fprintf('Supplier benefit improves %.2f%% than Random\n', ...
     ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
-% Plot supplier average benefit of RL vs Random 
+% Plot user average benefit of RL vs Random 
 figure();
 usr_ideal = squeeze(sum(sum(Result.usr_ideal_need,1)/day_num, 3));
 usr_RL = squeeze(sum(sum(Result.usr_actual_get_RL,1)/day_num,3));
 usr_Random = squeeze(sum(sum(Result.usr_actual_get_Random,1)/day_num,3));
-plot(hour_intv,  (usr_RL./usr_ideal).*(1-usr_avg_p_RL/sup_p_ub), '-o', ...
-       hour_intv,  (usr_Random./usr_ideal).*(1-usr_avg_p_Random/sup_p_ub), '-x');
+RL_percentage = ((usr_RL./usr_ideal).*(1-((usr_avg_p_RL-usr_p_lb)/(usr_p_ub-usr_p_lb))));
+    %((usr_ideal./usr_ideal).*(1-usr_p_lb/usr_p_ub));
+Random_percentage = ((usr_Random./usr_ideal).*(1-((usr_avg_p_Random-usr_p_lb)/(usr_p_ub-usr_p_lb))));
+    %((usr_ideal./usr_ideal).*(1-usr_p_lb/usr_p_ub));
+%plot(hour_intv,  (usr_RL./usr_ideal).*(1-usr_avg_p_RL/usr_p_ub), '-o', ...
+%       hour_intv,  (usr_Random./usr_ideal).*(1-usr_avg_p_Random/usr_p_ub), '-x');
+plot(hour_intv,  RL_percentage*100, '-o', ...
+       hour_intv,  Random_percentage*100, '-x');
 legend('RL', 'Random');
-title('Average user benefit comparison');
-ylabel('Benefit Ratio');
-xlabel('Day');
+title('Average user benefit comparison (In percentage)');
+ylabel('%');
+xlabel('Hour');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_user_benefit.jpg'));
 end
