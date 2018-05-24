@@ -78,7 +78,8 @@ for day = 1:day_num
         sup_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
         for iter_ = 1:ITERMAX 
             % Exploration
-            quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
+            %quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
+            quoted_price = quoted_price_lb*ones(1, plant_num);
             buy_price = randi([buy_price_lb buy_price_ub], 1, buy_num);
             
             % Start evaluating 
@@ -136,5 +137,5 @@ fprintf('Training time: %.2f mins\n', etime(clock, start_time)/60);
 % Save the model
 sup_Q_factor = sup_Q_factor ./ sup_weight;
 usr_Q_factor = usr_Q_factor ./ usr_weight;
-save('sup_Q_factor.mat', 'sup_Q_factor');
-save('usr_Q_factor.mat', 'usr_Q_factor');
+save('sup_Q_factor_fix_sup.mat', 'sup_Q_factor');
+save('usr_Q_factor_fix_sup.mat', 'usr_Q_factor');
