@@ -1,54 +1,43 @@
 % This is file that use Q-learning algorithm to train a supplier agent
 % Author: Chan-Wei Hu
 %=========================================================================
-clear all; 
-close all;
-warning off;
-
-% Define the path of training data 
-DATA_PATH = '../Data/Supplier/train/';
+function train(DATA_PATH, quoted_range, buy_range, sup_range, usr_range, ...
+    lr, beta, eta, ITERMAX, sup_model, usr_model)
 
 % Load the data
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
     = dataloader(DATA_PATH);
 
-quoted_price = rand(1, plant_num)*7+2;
-buy_price = rand(1, buy_num)*5+2;
 %==================== Using RL method ========================== 
 % For supplier
 % Discretize the action space => quoted_price
-quoted_price_ub = 9;
-quoted_price_lb = 4;
+quoted_price_ub = quoted_range(2);
+quoted_price_lb = quoted_range(1);
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
 supply_action_num = size(quoted_edges,2);
 
 % Discretize the supply state space => demand 
-demand_ub = 200;
-demand_lb = 0;
+demand_ub = sup_range(2);
+demand_lb = sup_range(1);
 demand_state_edges = demand_lb:5:demand_ub;
 demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
 % Discretize the action space => buy_price
-buy_price_ub = 7;
-buy_price_lb = 3;
+buy_price_ub = buy_range(2);
+buy_price_lb = buy_range(1);
 buy_edges = buy_price_lb:1:buy_price_ub;
 user_action_num = size(buy_edges,2);
 
 % Discretize the demand state space => supply
-supply_ub = 200;
-supply_lb = 0;
+supply_ub = usr_range(2);
+supply_lb = usr_range(1);
 supply_state_edges = supply_lb:5:supply_ub;
 supply_state_num = size(supply_state_edges,2) - 1;
 
-% Maintain a Q-factor and setup the parameters for R-SMART learning
+% Maintain a Q-factor and setup the parameters for learning
 sup_Q_factor = zeros(plant_num, demand_state_num, supply_action_num);
 usr_Q_factor = zeros(buy_num, supply_state_num, user_action_num);
-% Best: lr = 0.001, beta=0.01
-lr = 0.001;
-beta = 0.01;
-eta = 0.99;
-ITERMAX = 10;
 
 % Total reward and average reward table
 sup_tr = zeros(plant_num, demand_state_num, supply_action_num);
@@ -85,7 +74,7 @@ for day = 1:day_num
             % Start evaluating 
             f = [-1 * buy_price quoted_price];
             b = [power_dem(compute_time, :) plants_data(compute_time, :)];
-            [x, fval, exitflag, output] = linprog(f, A, b, Aeq, beq, ...
+            [x, ~, ~, ~] = linprog(f, A, b, Aeq, beq, ...
                 zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num), [], ...
                 optimset('Display','none'));
             
@@ -103,11 +92,16 @@ for day = 1:day_num
                 sup_ar(j,dem_cur_state(j),quoted_p) = (1-beta)*sup_ar(j,dem_cur_state(j),quoted_p) ...
                     + beta*(sup_tr(j,dem_cur_state(j),quoted_p)/sup_weight(j, dem_cur_state(j), quoted_p));
                 avg_reward = sup_ar(j,dem_cur_state(j),quoted_p);
-                % Update supply Q-factor
-                %sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
-                %    lr*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
-                sup_Q_factor(j,dem_cur_state(j),quoted_p) = (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
-                    lr*(immi_reward + eta*(max(sup_Q_factor(j,dem_cur_state(j),:))));
+                % Get next state
+                next_state = discretize(x(j+buy_num), demand_state_edges);
+                % Update supply Q-factor (R-SMART)
+                %sup_Q_factor(j,dem_cur_state(j),quoted_p) = ...
+                %    (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
+                %    lr*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,next_state,:))));
+                % Update supply Q-factor (Q-learning)
+                sup_Q_factor(j,dem_cur_state(j),quoted_p) = ...
+                    (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
+                    lr*(immi_reward + eta*(max(sup_Q_factor(j,next_state,:))));
             end
             % Update the reward of user
             for j = 1:buy_num
@@ -122,11 +116,16 @@ for day = 1:day_num
                 usr_ar(j,sup_cur_state(j),buy_p) = (1-beta)*usr_ar(j,sup_cur_state(j),buy_p) ...
                     + beta*(usr_tr(j,sup_cur_state(j),buy_p)/usr_weight(j, sup_cur_state(j), buy_p));
                 avg_reward = usr_ar(j,sup_cur_state(j),buy_p);
-                % Update user Q-factor
-                %usr_Q_factor(j,sup_cur_state(j),buy_p) = (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
-                %    lr*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,sup_cur_state(j),:))));
-                usr_Q_factor(j,sup_cur_state(j),buy_p) = (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
-                    lr*(immi_reward + eta*(max(usr_Q_factor(j,sup_cur_state(j),:))));
+                % Get next state
+                next_state = discretize(x(j), supply_state_edges);
+                % Update user Q-factor (R-SMART)
+                %usr_Q_factor(j,sup_cur_state(j),buy_p) = ...
+                %    (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
+                %    lr*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,next_state,:))));
+                % Update user Q-factor (Q-learning)
+                usr_Q_factor(j,sup_cur_state(j),buy_p) = ...
+                    (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
+                    lr*(immi_reward - eta*(max(usr_Q_factor(j,next_state,:))));
             end
         end
     end
@@ -137,5 +136,6 @@ fprintf('Training time: %.2f mins\n', etime(clock, start_time)/60);
 % Save the model
 sup_Q_factor = sup_Q_factor ./ sup_weight;
 usr_Q_factor = usr_Q_factor ./ usr_weight;
-save('sup_Q_factor_fix_sup.mat', 'sup_Q_factor');
-save('usr_Q_factor_fix_sup.mat', 'usr_Q_factor');
+save(sup_model, 'sup_Q_factor');
+save(usr_model, 'usr_Q_factor');
+end

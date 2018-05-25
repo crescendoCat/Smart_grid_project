@@ -1,12 +1,8 @@
 % This is file that test our supplier and demander agent
 % Author: Chan-Wei Hu
 %=========================================================================
-clear all; 
-close all;
-warning off;
-
-% Define the test data path
-DATA_PATH = '../Data/Supplier/test/';
+function [Result] = test(DATA_PATH, quoted_range, buy_range, supply_range, ...
+    demand_range, sup_model, usr_model)
 
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
     = dataloader(DATA_PATH);
@@ -16,37 +12,31 @@ buy_price = rand(1, buy_num)*5;
 
 % For supplier
 % Discretize the action space => quoted_price
-quoted_price_ub = 9;
-quoted_price_lb = 4;
+quoted_price_ub = quoted_range(2);
+quoted_price_lb = quoted_range(1);
 quoted_edges = quoted_price_lb:1:quoted_price_ub;
-supply_action_num = size(quoted_edges,2);
 
 % Discretize the supply state space => demand 
-demand_ub = 200;
-demand_lb = 0;
+demand_ub = supply_range(2);
+demand_lb = supply_range(1);
 demand_state_edges = demand_lb:5:demand_ub;
-demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
 % Discretize the action space => buy_price
-buy_price_ub = 7;
-buy_price_lb = 3;
+buy_price_ub = buy_range(2);
+buy_price_lb = buy_range(1);
 buy_edges = buy_price_lb:1:buy_price_ub;
-user_action_num = size(buy_edges,2);
 
 % Discretize the demand state space => supply
-supply_ub = 200;
-supply_lb = 0;
+supply_ub = demand_range(2);
+supply_lb = demand_range(1);
 supply_state_edges = supply_lb:5:supply_ub;
-supply_state_num = size(supply_state_edges,2) - 1;
 
 % Load in the Q-factor table
-load('sup_Q_factor.mat', 'sup_Q_factor');
-load('usr_Q_factor.mat', 'usr_Q_factor');
+load(sup_model, 'sup_Q_factor');
+load(usr_model, 'usr_Q_factor');
 
 % Variables for linear programming
-fval_log = [];
-eve_x_log = [];
 A = eye(plant_num+buy_num);
 Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
 beq = 0;
@@ -99,7 +89,7 @@ for day = 1:day_num
             f = [-1 * buy_price quoted_price];
             b = [power_dem(compute_time, :) plants_data(compute_time, :)];
 
-            [x, fval, exitflag, output] = linprog(f, A, b, Aeq, beq, ...
+            [x, ~, ~, ~] = linprog(f, A, b, Aeq, beq, ...
                 zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num), [], ...
                 optimset('Display','none'));
             
@@ -113,7 +103,5 @@ for day = 1:day_num
         end
     end
 end
-
-% Draw the result
-draw_result(Result, day_num, quoted_price_ub, buy_price_ub, buy_price_lb, 0);
 fprintf('Testing time: %.2f sec\n', etime(clock, start_time));
+end

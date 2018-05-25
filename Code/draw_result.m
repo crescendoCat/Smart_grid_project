@@ -1,9 +1,9 @@
-function draw_result(Result, day_num, sup_p_ub, usr_p_ub, usr_p_lb, SAVE_FLAG)
+function draw_result(Result, day_num, sup_p_ub, usr_p_ub, usr_p_lb, ...
+    SAVE_FLAG, output_dir)
 % Description:
 %   This is function for plotting the result.
 %   Author: Chan-Wei Hu
 %=========================================================================
-output_dir = '../Result/';
 
 % Plot the supplier quoted price difference 
 % Reshape it first : [day_num*hour_intv, plant_num] -> [day_num, hour_intv, plant_num]
