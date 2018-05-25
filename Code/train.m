@@ -1,8 +1,9 @@
-% This is file that use Q-learning algorithm to train a supplier agent
-% Author: Chan-Wei Hu
-%=========================================================================
 function train(DATA_PATH, quoted_range, buy_range, sup_range, usr_range, ...
-    lr, beta, eta, ITERMAX, sup_model, usr_model)
+    update_method, lr, beta, eta, ITERMAX, sup_model, usr_model)
+% Description:
+%   This is function for training the model.
+%   Author: Chan-Wei Hu
+%=========================================================================
 
 % Load the data
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
@@ -94,14 +95,19 @@ for day = 1:day_num
                 avg_reward = sup_ar(j,dem_cur_state(j),quoted_p);
                 % Get next state
                 next_state = discretize(x(j+buy_num), demand_state_edges);
+                if strcmp(update_method, 'R-SMART')
                 % Update supply Q-factor (R-SMART)
-                %sup_Q_factor(j,dem_cur_state(j),quoted_p) = ...
-                %    (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
-                %    lr*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,next_state,:))));
+                sup_Q_factor(j,dem_cur_state(j),quoted_p) = ...
+                    (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
+                    lr*(immi_reward - avg_reward + eta*(max(sup_Q_factor(j,next_state,:))));
+                elseif strcmp(update_method, 'Q-learning')
                 % Update supply Q-factor (Q-learning)
                 sup_Q_factor(j,dem_cur_state(j),quoted_p) = ...
                     (1-lr)*sup_Q_factor(j, dem_cur_state(j), quoted_p)+ ...
                     lr*(immi_reward + eta*(max(sup_Q_factor(j,next_state,:))));
+                else
+                    error('Unknown update method. Please check the method list');
+                end
             end
             % Update the reward of user
             for j = 1:buy_num
@@ -118,14 +124,19 @@ for day = 1:day_num
                 avg_reward = usr_ar(j,sup_cur_state(j),buy_p);
                 % Get next state
                 next_state = discretize(x(j), supply_state_edges);
+                if strcmp(update_method, 'R-SMART')
                 % Update user Q-factor (R-SMART)
-                %usr_Q_factor(j,sup_cur_state(j),buy_p) = ...
-                %    (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
-                %    lr*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,next_state,:))));
+                usr_Q_factor(j,sup_cur_state(j),buy_p) = ...
+                    (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
+                    lr*(immi_reward - avg_reward + eta*(max(usr_Q_factor(j,next_state,:))));
+                elseif strcmp(update_method, 'Q-learning')
                 % Update user Q-factor (Q-learning)
                 usr_Q_factor(j,sup_cur_state(j),buy_p) = ...
                     (1-lr)*usr_Q_factor(j, sup_cur_state(j),buy_p)+ ...
                     lr*(immi_reward - eta*(max(usr_Q_factor(j,next_state,:))));
+                else
+                    error('Unknown update method. Please check the method list');
+                end    
             end
         end
     end

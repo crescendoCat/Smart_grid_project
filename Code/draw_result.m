@@ -1,5 +1,5 @@
-function draw_result(Result, day_num, sup_p_ub, usr_p_ub, usr_p_lb, ...
-    SAVE_FLAG, output_dir)
+function draw_result(Result, Result2, day_num, sup_p_ub, sup_p_lb, usr_p_ub, ...
+    usr_p_lb, SAVE_FLAG, output_dir)
 % Description:
 %   This is function for plotting the result.
 %   Author: Chan-Wei Hu
@@ -84,16 +84,16 @@ if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'User Need.jpg'));
 end
 
-% Plot supplier average benefit of RL vs Random
+%% Plot supplier average benefit of RL vs Random
 figure();
 sup_RL = squeeze(sum(sum(Result.sup_actual_supply_RL,1)/day_num,3));
 sup_Random = squeeze(sum(sum(Result.sup_actual_supply_Random,1)/day_num,3));
 RL_percentage = ((sup_RL./ideal_need).*(sup_avg_p_RL/sup_p_ub));
 Random_percentage = ((sup_Random./ideal_need).*(1-sup_avg_p_Random/sup_p_ub));
-%plot(hour_intv, (sup_RL./sup_ideal).*(sup_avg_p_RL/sup_p_ub),  '-o', ...
-%       hour_intv, (sup_Random./sup_ideal).*(sup_avg_p_Random/sup_p_ub), '-x');
-RL_fix = [0.38 0.433 0.441 0.385 0.3817	0.386 0.388 0.38 0.366 0.338 ...
-            0.288 0.151];
+
+% Result of fixed to lowest price
+sup_RL_fix = squeeze(sum(sum(Result2.sup_actual_supply_RL,1)/day_num,3));
+RL_fix = ((sup_RL_fix./ideal_need).*(sup_p_lb/sup_p_ub));
 
 plot(hour_intv, RL_percentage*100,  '-o', ... 
      hour_intv, RL_fix*100, '-+', ...
@@ -110,19 +110,17 @@ hour_avg_random = sum((sup_Random./sup_ideal).*(sup_avg_p_Random/9))/length(hour
 fprintf('Supplier benefit improves %.2f%% than Random\n', ...
     ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
-% Plot supplier average benefit of RL vs Random 
+%% Plot supplier average benefit of RL vs Random 
 figure();
 usr_ideal = squeeze(sum(sum(Result.usr_ideal_need,1)/day_num, 3));
 usr_RL = squeeze(sum(sum(Result.usr_actual_get_RL,1)/day_num,3));
 usr_Random = squeeze(sum(sum(Result.usr_actual_get_Random,1)/day_num,3));
 RL_percentage = ((usr_RL./usr_ideal).*(1-((usr_avg_p_RL-usr_p_lb)/(usr_p_ub-usr_p_lb))));
-    %((usr_ideal./usr_ideal).*(1-usr_p_lb/usr_p_ub));
 Random_percentage = ((usr_Random./usr_ideal).*(1-((usr_avg_p_Random-usr_p_lb)/(usr_p_ub-usr_p_lb))));
-    %((usr_ideal./usr_ideal).*(1-usr_p_lb/usr_p_ub));
-%plot(hour_intv,  (usr_RL./usr_ideal).*(1-usr_avg_p_RL/usr_p_ub), '-o', ...
-%       hour_intv,  (usr_Random./usr_ideal).*(1-usr_avg_p_Random/usr_p_ub), '-x');
-RL_fix = [0.427 0.484 0.497 0.546 0.573 0.575 0.585 0.575 0.5511 0.514 ...
-            0.44 0.245];
+
+% Fixed to lowest quoted price
+usr_RL_fix = squeeze(sum(sum(Result2.usr_actual_get_RL,1)/day_num,3));
+RL_fix = ((usr_RL_fix./usr_ideal).*(1-((usr_avg_p_RL-usr_p_lb)/(usr_p_ub-usr_p_lb))));
 
 plot(hour_intv,  RL_percentage*100, '-o', ...
      hour_intv, RL_fix*100, '-+', ...

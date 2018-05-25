@@ -1,14 +1,12 @@
-% This is file that test our supplier and demander agent
-% Author: Chan-Wei Hu
-%=========================================================================
 function [Result] = test(DATA_PATH, quoted_range, buy_range, supply_range, ...
     demand_range, sup_model, usr_model)
+% Description:
+%   This is function for testing the model.
+%   Author: Chan-Wei Hu
+%=========================================================================
 
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
     = dataloader(DATA_PATH);
-
-quoted_price = zeros(1, plant_num);
-buy_price = rand(1, buy_num)*5;
 
 % For supplier
 % Discretize the action space => quoted_price
@@ -61,6 +59,8 @@ for day = 1:day_num
             if use_RL 
                 % Get supplier current state
                 sup_cur_state = discretize(plants_data(compute_time, :), demand_state_edges);
+                quoted_price = zeros(1, plant_num);
+                buy_price = zeros(1, buy_num);
                 for i = 1:plant_num
                     % Get the index of the max Q-value in current state, that is
                     % the price to quote
