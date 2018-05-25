@@ -54,7 +54,7 @@ elseif strcmp(phase, 'test')
         quoted_price_range(1), buy_price_range(2), buy_price_range(1), ...
         SAVE_FLAG, SAVE_PATH);
 else
-    fprintf('[ERROR] Undefined phase, please check your argument.');
+    error('[ERROR] Undefined phase, please check your argument.');
 end    
 
     
