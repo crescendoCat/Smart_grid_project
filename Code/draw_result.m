@@ -50,16 +50,16 @@ if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'User_price_cmp.jpg'));
 end
 
-% Actual supply and ideal supply comparison
+%% Actual supply and ideal supply comparison
 ideal_supply = sum(sum(Result.sup_ideal_supply,1)/day_num, 3);
-sup_ideal = squeeze(ideal_supply./ideal_supply)*100;
-sup_RL = squeeze(sum(sum(Result.sup_actual_supply_RL,1)/day_num,3)./ideal_supply)*100;
+sup_QL = squeeze(sum(sum(Result2.sup_actual_supply_RL,1)/day_num,3)./ideal_supply)*100;
+sup_R_SMART = squeeze(sum(sum(Result.sup_actual_supply_RL,1)/day_num,3)./ideal_supply)*100;
 sup_Random = squeeze(sum(sum(Result.sup_actual_supply_Random,1)/day_num,3)./ideal_supply)*100;
 figure();
-plot(hour_intv,  sup_ideal, '-o', ...
-       hour_intv,  sup_RL, '-x', ...
+plot(hour_intv,  sup_R_SMART, '-o', ...
+       hour_intv,  sup_QL, '-x', ...
        hour_intv,  sup_Random, '-+');
-legend('Ideal', 'RL', 'Random');
+legend('R-SMART', 'Q-learning', 'Random');
 title('Supplier total supply comparison');
 ylabel('%');
 xlabel('hour');
@@ -67,16 +67,16 @@ if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Supply.jpg'));
 end
 
-% Actual get and ideal need comparison
+%% Actual get and ideal need comparison
 ideal_need = sum(sum(Result.usr_ideal_need,1)/day_num, 3);
-usr_ideal = squeeze(ideal_need./ideal_need)*100;
-usr_RL = squeeze(sum(sum(Result.usr_actual_get_RL,1)/day_num,3)./ideal_need)*100;
+usr_QL = squeeze(sum(sum(Result2.usr_actual_get_RL,1)/day_num,3)./ideal_need)*100;
+usr_R_SMART= squeeze(sum(sum(Result.usr_actual_get_RL,1)/day_num,3)./ideal_need)*100;
 usr_Random = squeeze(sum(sum(Result.usr_actual_get_Random,1)/day_num,3)./ideal_need)*100;
 figure();
-plot(hour_intv,  usr_ideal, '-o', ...
-       hour_intv,  usr_RL, '-x', ...
+plot(hour_intv,  usr_R_SMART, '-o', ...
+       hour_intv,  usr_QL, '-x', ...
        hour_intv,  usr_Random, '-+');
-legend('Ideal', 'RL', 'Random');
+legend('R-SMART', 'Q-learning', 'Random');
 title('Percentage of user need comparison');
 ylabel('%');
 xlabel('hour');
@@ -98,17 +98,17 @@ RL_fix = ((sup_RL_fix./ideal_need).*(sup_p_lb/sup_p_ub));
 plot(hour_intv, RL_percentage*100,  '-o', ... 
      hour_intv, RL_fix*100, '-+', ...
      hour_intv, Random_percentage*100, '-x');
-legend('RL', 'RL fix', 'Random');
+legend('R-SMART', 'Q-learning', 'Random');
 title('Average supplier benefit');
 ylabel('Benefit Ratio');
 xlabel('Day');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_supplier_benefit.jpg'));
 end
-hour_avg_RL = sum((sup_RL./sup_ideal).*(sup_avg_p_RL/9))/length(hour_intv);
-hour_avg_random = sum((sup_Random./sup_ideal).*(sup_avg_p_Random/9))/length(hour_intv);
-fprintf('Supplier benefit improves %.2f%% than Random\n', ...
-    ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
+%hour_avg_RL = sum((sup_RL./sup_ideal).*(sup_avg_p_RL/9))/length(hour_intv);
+%hour_avg_random = sum((sup_Random./sup_ideal).*(sup_avg_p_Random/9))/length(hour_intv);
+%fprintf('Supplier benefit improves %.2f%% than Random\n', ...
+%    ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
 %% Plot supplier average benefit of RL vs Random 
 figure();
@@ -125,16 +125,16 @@ RL_fix = ((usr_RL_fix./usr_ideal).*(1-((usr_avg_p_RL-usr_p_lb)/(usr_p_ub-usr_p_l
 plot(hour_intv,  RL_percentage*100, '-o', ...
      hour_intv, RL_fix*100, '-+', ...
      hour_intv,  Random_percentage*100, '-x');
-legend('RL', 'RL fix', 'Random');
+legend('R-SMART', 'Q-learning', 'Random');
 title('Average user benefit comparison');
 ylabel('Benefit Ratio');
 xlabel('Day');
 if SAVE_FLAG
     saveas(gcf, strcat(output_dir, 'Average_user_benefit.jpg'));
 end
-hour_avg_RL = sum((usr_RL./usr_ideal).*(1-usr_avg_p_RL/usr_p_ub))/length(hour_intv);
-hour_avg_random = sum((usr_Random./usr_ideal).*(1-usr_avg_p_Random/usr_p_ub))/length(hour_intv);
-fprintf('User benefit improves %.2f%% than Random\n', ...
-    ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
+%hour_avg_RL = sum((usr_RL./usr_ideal).*(1-usr_avg_p_RL/usr_p_ub))/length(hour_intv);
+%hour_avg_random = sum((usr_Random./usr_ideal).*(1-usr_avg_p_Random/usr_p_ub))/length(hour_intv);
+%fprintf('User benefit improves %.2f%% than Random\n', ...
+%    ((hour_avg_RL - hour_avg_random)/hour_avg_random)*100);
 
 end
