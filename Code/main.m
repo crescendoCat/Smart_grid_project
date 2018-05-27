@@ -9,9 +9,9 @@ phase = 'test';
 update_method = 'R-SMART';
 update_method_QL = 'Q-learning';
 SAVE_FLAG = 0;
-SAVE_PATH = strcat('../Result/', update_method);
+SAVE_PATH = '../Result';
+%SAVE_PATH = strcat('../Result/', update_method);
 quoted_price_range = [4 9];
-quoted_price_range_QL = [4 9];
 buy_price_range = [3 8];
 supply_range = [0 200];
 demand_range = [0 200];
@@ -31,11 +31,13 @@ if strcmp(phase,'train')
     lr = 0.001;
     beta = 0.01;
     eta = 0.9;
-    ITERMAX = 50;
+    ITERMAX = 1;
 
     train(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-        demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
-        usr_model);
+           demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
+           usr_model);
+    %    demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
+    %    usr_model);
     
 elseif strcmp(phase, 'test')
     % Testing phase
