@@ -68,8 +68,7 @@ for day = 1:day_num
         sup_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
         for iter_ = 1:ITERMAX 
             % Exploration
-            %quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
-            quoted_price = quoted_price_lb*ones(1, plant_num);
+            quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
             buy_price = randi([buy_price_lb buy_price_ub], 1, buy_num);
             
             % Start evaluating 
