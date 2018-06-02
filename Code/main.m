@@ -10,8 +10,8 @@ update_method = 'R-SMART';
 update_method_QL = 'Q-learning';
 SAVE_FLAG = 1;
 SAVE_PATH = '../Result';
-quoted_price_range = [3 7];
-buy_price_range = [4 8];
+quoted_price_range = [1 2];
+buy_price_range = [2 10];
 supply_range = [0 200];
 demand_range = [0 200];
 % Set up parameters

@@ -36,7 +36,7 @@ for i=1:length(plants_day_list)
     plants_data_base(i,:,:) = plants_data_base_tmp;
 end
 
-buy_num = 2;
+buy_num = 3;
 total_power_dem = zeros(day_num, 24, buy_num);
 usr_total_power_day1 = [823.2 760.69 690.2 701.28 660.49 683.57 718.55 1013.8 1073.45 ...
     1227.85 1329.51 1391.72 1340.42 1438.32 1458.11 1441 1496.1 1346.59 1273.67 ...
@@ -48,18 +48,33 @@ usr_total_power_day1 = [823.2 760.69 690.2 701.28 660.49 683.57 718.55 1013.8 10
     3011.82 2803.92 2929.05 3135.76 2985.83 2865.75 2503.38 2280.70 2175.13 2102.34 ...
     1698.19 1532.40 1465.93];
 
+scale_ratio = 6;
 for i = 1:buy_num
-    total_power_dem(1,:,i) = usr_total_power_day1(i,:)' * 25 / 1000;
+    total_power_dem(1,:,i) = usr_total_power_day1(i,:)' * scale_ratio / 1000;
 end
 
 % Random generate demand of other days based on day1 true data
 for other=2:day_num
     % Random generate integer from 20~30
     for i = 1:buy_num
-        random_int = 10*rand(1)+20;
+        random_int = randi([scale_ratio-5 scale_ratio+5]);
         total_power_dem(other,:,i)=usr_total_power_day1(i,:)' * random_int / 1000;
     end
 end
+
+plant_dis = squeeze(sum(sum(plants_data_base, 1)./day_num, 3)./plant_num);
+demand_dis = squeeze(sum(sum(total_power_dem, 1)./day_num, 3)./buy_num);
+hour_intv = 1:1:24;
+
+figure()
+plot(hour_intv, plant_dis, '-o', ...
+       hour_intv, demand_dis, '-+');
+legend('Supply', 'Demand');
+title('Database');
+ylabel('kW');
+xlabel('time');
+saveas(gcf, strcat('../Result', '/Data_dist.jpg'));
+
 end
 
 
