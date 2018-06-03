@@ -48,7 +48,7 @@ usr_total_power_day1 = [823.2 760.69 690.2 701.28 660.49 683.57 718.55 1013.8 10
     3011.82 2803.92 2929.05 3135.76 2985.83 2865.75 2503.38 2280.70 2175.13 2102.34 ...
     1698.19 1532.40 1465.93];
 
-scale_ratio = 6;
+scale_ratio = 50;
 for i = 1:buy_num
     total_power_dem(1,:,i) = usr_total_power_day1(i,:)' * scale_ratio / 1000;
 end
@@ -62,8 +62,8 @@ for other=2:day_num
     end
 end
 
-plant_dis = squeeze(sum(sum(plants_data_base, 1)./day_num, 3)./plant_num);
-demand_dis = squeeze(sum(sum(total_power_dem, 1)./day_num, 3)./buy_num);
+plant_dis = squeeze(sum(sum(plants_data_base, 1)./day_num, 3));
+demand_dis = squeeze(sum(sum(total_power_dem, 1)./day_num, 3));
 hour_intv = 1:1:24;
 
 figure()

@@ -8,6 +8,8 @@ function train(DATA_PATH, quoted_range, buy_range, sup_range, usr_range, ...
 % Load the data
 [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
     = dataloader(DATA_PATH);
+fprintf('Max plant supply: %.2f\n', max(plants_data_base(:)));
+fprintf('Max user need: %.2f\n', max(total_power_dem(:)));
 
 %==================== Using RL method ========================== 
 % For supplier
@@ -135,7 +137,7 @@ for day = 1:day_num
                     lr*(immi_reward - eta*(max(usr_Q_factor(j,next_state,:))));
                 else
                     error('Unknown update method. Please check the method list');
-                end    
+                end
             end
         end
     end
