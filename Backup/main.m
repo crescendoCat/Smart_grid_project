@@ -12,14 +12,14 @@ SAVE_FLAG = 1;
 SAVE_PATH = '../Result';
 quoted_price_range = [1 8];
 buy_price_range = [3 10];
-supply_range = [0 500];
-demand_range = [0 500];
+supply_range = [0 200];
+demand_range = [0 200];
 % Set up parameters
 % Best: lr = 0.001, beta=0.01
 lr = 0.001;
 beta = 0.01;
 eta = 0.9;
-ITERMAX = 50;
+ITERMAX = 100;
 sup_model = strcat('../Model/sup_Q_factor_', update_method, '_iter_', int2str(ITERMAX), '.mat');
 usr_model = strcat('../Model/usr_Q_factor_', update_method, '_iter_', int2str(ITERMAX), '.mat');
 sup_model_QL = strcat('../Model/sup_Q_factor_', update_method_QL, '_iter_', int2str(ITERMAX), '.mat');

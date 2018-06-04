@@ -18,6 +18,7 @@ quoted_edges = quoted_price_lb:1:quoted_price_ub;
 demand_ub = supply_range(2);
 demand_lb = supply_range(1);
 demand_state_edges = demand_lb:5:demand_ub;
+demand_state_num = size(demand_state_edges,2) - 1;
 
 % For User
 % Discretize the action space => buy_price
@@ -29,6 +30,7 @@ buy_edges = buy_price_lb:1:buy_price_ub;
 supply_ub = demand_range(2);
 supply_lb = demand_range(1);
 supply_state_edges = supply_lb:5:supply_ub;
+supply_state_num = size(supply_state_edges,2) - 1;
 
 % Load in the Q-factor table
 load(sup_model, 'sup_Q_factor');
@@ -58,19 +60,24 @@ for day = 1:day_num
         for compute_time = 7:18
             if use_RL 
                 % Get supplier current state
-                sup_cur_state = discretize(plants_data(compute_time, :), demand_state_edges);
+                sup_cur_state = discretize(plants_data(compute_time, :), supply_state_edges);
+                total_sup_cur_state = discretize(sum(plants_data(compute_time, :)), supply_state_edges);
+                total_dem_cur_state = discretize(sum(power_dem(compute_time, :)), demand_state_edges);
+                sup_cur = total_dem_cur_state * supply_state_num + sup_cur_state;
+                
                 quoted_price = zeros(1, plant_num);
                 buy_price = zeros(1, buy_num);
                 for i = 1:plant_num
                     % Get the index of the max Q-value in current state, that is
                     % the price to quote
-                    [~, quoted_price(i)] = max(sup_Q_factor(i, sup_cur_state(i), :));
+                    [~, quoted_price(i)] = max(sup_Q_factor(i, sup_cur(i), :));
                     quoted_price(i) = quoted_price(i)+quoted_price_lb-1;
                 end
                 % Get user current state
-                usr_cur_state = discretize(power_dem(compute_time, :), supply_state_edges);
+                usr_cur_state = discretize(power_dem(compute_time, :), demand_state_edges);
+                usr_cur = total_sup_cur_state * demand_state_num + usr_cur_state;
                 for i = 1:buy_num
-                    [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur_state(i), :)); 
+                    [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur(i), :)); 
                     buy_price(i) = buy_price(i)+buy_price_lb-1;
                 end
                 
