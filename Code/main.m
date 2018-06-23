@@ -5,10 +5,10 @@ clear global;
 close all;
 warning off;
 
-phase = 'train';
+phase = 'test';
 update_method = 'R-SMART';
 update_method_QL = 'Q-learning';
-SAVE_FLAG = 1;
+SAVE_FLAG = 0;
 SAVE_PATH = '../Result';
 quoted_price_range = [1 8];
 buy_price_range = [3 10];
