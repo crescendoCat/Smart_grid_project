@@ -8,7 +8,7 @@ function [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
 plants_day_dir = dir(DATA_PATH);
 plants_day_list = {};
 day_num = size(plants_day_dir, 1)-2;
-
+day_num = 10;
 for i=3:size(plants_day_dir, 1)
     plants_day_list = [plants_day_list; strcat(DATA_PATH, plants_day_dir(i).name)];
 end
@@ -59,6 +59,7 @@ for i = 1:buy_num
 end
 
 % Random generate demand of other days based on day1 true data
+rng(1);
 for other=2:day_num
     % Random generate integer from 20~30
     for i = 1:buy_num
@@ -72,7 +73,7 @@ plants_data_base = plants_data_base.*0.8;
 plant_dis = squeeze(sum(sum(plants_data_base, 1)./day_num, 3));
 demand_dis = squeeze(sum(sum(total_power_dem, 1)./day_num, 3));
 hour_intv = 1:1:24;
-
+%{
 figure()
 plot(hour_intv, plant_dis, '-o', ...
      hour_intv, demand_dis, '-+');
@@ -81,7 +82,7 @@ title('Database');
 ylabel('degree');
 xlabel('time');
 saveas(gcf, strcat('../Result', '/Data_dist.jpg'));
-
+%}
 end
 
 
