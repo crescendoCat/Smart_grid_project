@@ -173,9 +173,12 @@ set(ax1, 'Position', pos);
 h1 = bar(ax1, data.plants_sup_growth_rate, 'FaceColor','flat');
 ylim(ax1, [-150, 150]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax1, 'Suppliers');
-ylabel(ax1, 'Percentage(%)');
-title(ax1, 'Electricity Supply Growth Rate of Each Plant');
+xlabel(ax1, 'Suppliers', 'FontSize', 11);
+ylabel(ax1, 'Percentage', 'FontSize', 11);
+title(ax1, 'Supply Growth', 'FontSize', 12);
+t1 = labelBar(h1, data.plants_sup_growth_rate);
+% Make Left bars first in list so that the kth bar is made up of the kth
+% column of data.
 
 ax2 = subplot( 4, 1, 2);
 pos = get(ax2, 'Position');
@@ -185,9 +188,10 @@ h2 = bar(ax2, data.plants_earn_growth_rate, 'FaceColor','flat');
 
 ylim(ax2, [-150, 150]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax2, 'Suppliers');
-ylabel(ax2, 'Percentage(%)');
-title(ax2, 'Income Growth Rate of Each Plant');
+xlabel(ax2, 'Suppliers', 'FontSize', 11);
+ylabel(ax2, 'Percentage', 'FontSize', 11);
+title(ax2, 'Income Growth', 'FontSize', 12);
+t2 = labelBar(h2, data.plants_earn_growth_rate);
 
 ax3 = subplot( 4, 1, 3);
 pos = get(ax3, 'Position')
@@ -197,9 +201,10 @@ h3 = bar(ax3, data.users_need_growth_rate);
 h3.FaceColor = 'flat';
 ylim(ax3, [-150, 150]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax3, 'Power users');
-ylabel(ax3, 'Percentage(%)');
-title(ax3, 'Electricity Demand Growth Rate of Each Power User');
+xlabel(ax3, 'Power users', 'FontSize', 11);
+ylabel(ax3, 'Percentage', 'FontSize', 11);
+title(ax3, 'Demand Sufficiency Growth', 'FontSize', 12);
+t3 = labelBar(h3, data.users_need_growth_rate);
 
 ax4 = subplot(4, 1, 4);
 pos = get(ax4, 'Position');
@@ -208,13 +213,16 @@ set(ax4, 'Position', pos);
 h4 = bar(ax4, data.users_cost_growth_rate, 'FaceColor','flat');
 ylim(ax4, [-150, 150]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax4, 'Power users');
-ylabel(ax4, 'Percentage(%)');
-title(ax4, 'Spending decay rate Rate of Each Power User');
+xlabel(ax4, 'Power users', 'FontSize', 11);
+ylabel(ax4, 'Percentage', 'FontSize', 11);
+title(ax4, 'Saving Rate', 'FontSize', 12);
+t4 = labelBar(h4, data.users_cost_growth_rate);
 
 global handlers;
-handlers = containers.Map({'sup_rate' 'earn_rate' 'need_rate' 'cost_rate' 'total_gen' 'total_dem'}, ... 
-    {h1, h2, h3, h4, dh1, dh2});
+handlers = containers.Map({'sup_rate' 'earn_rate' 'need_rate' 'cost_rate' 'total_gen' 'total_dem'...
+    'sup_t' 'earn_t' 'need_t' 'cost_t'}, ... 
+    {h1, h2, h3, h4, dh1, dh2, ...
+    t1, t2, t3, t4});
 update_graph_data(handles);
 
 % Update handles structure
@@ -377,6 +385,35 @@ function data = computeDataFromResult(Result, now_display_hour)
         'day_sup', day_total_sup_gRate, 'day_earn', day_total_earn_gRate, ...
         'day_need', day_total_need_gRate, 'day_cost', day_total_cost_gRate);
 
+function tlist = labelBar(h, labels)
+    str = []
+    for i=1:numel(h.YData)
+        str = [str string(sprintf('%3.0f', labels(i)))]
+    end
+    tlist = text(h.XData, h.YData, str, 'HorizontalAlignment','center', 'VerticalAlignment','bottom');
+    
+    
+    
+function tlist = updateBarLabel(h, tlist, labels)
+    for i=1:numel(h.YData)
+        
+        if h.YData(i) < 0
+            y = h.YData(i) - 60;
+        else
+            y = h.YData(i);
+        end
+        
+        if y >= 90
+            y = 90;
+        elseif y <= -160
+            y = -160;
+        end
+        tlist(i).Position = [h.XData(i), y];
+        tlist(i).String = sprintf('%3.0f', labels(1, i));
+    end
+
+    
+    
 function out = computeCData(list)
     len = max(size(list))
     out = repmat([0 0.4470 0.7410], len, 1);
@@ -504,9 +541,16 @@ day = round(get(handles.slider2, 'Value'));
 now_display_hour = round(get(handles.slider1, 'Value')) - start_time+1;
 [data] = computeDataFromResult(Result, now_display_hour);
 set(handlers('sup_rate'), 'ydata', data.plants_sup_growth_rate);
+updateBarLabel(handlers('sup_rate'), handlers('sup_t'), data.plants_sup_growth_rate);
+
 set(handlers('earn_rate'), 'ydata', data.plants_earn_growth_rate);
+updateBarLabel(handlers('earn_rate'), handlers('earn_t'), data.plants_earn_growth_rate);
+
 set(handlers('need_rate'), 'ydata', data.users_need_growth_rate);
+updateBarLabel(handlers('need_rate'), handlers('need_t'), data.users_need_growth_rate);
+
 set(handlers('cost_rate'), 'ydata', data.users_cost_growth_rate);
+updateBarLabel(handlers('cost_rate'), handlers('cost_t'), data.users_cost_growth_rate);
 
 set(handlers('sup_rate'), 'cdata', computeCData(data.plants_sup_growth_rate));
 set(handlers('earn_rate'), 'cdata', computeCData(data.plants_earn_growth_rate));
@@ -547,4 +591,20 @@ set(textHandle, 'String', s);
 
 textHandle = findobj('Tag', 'text_cost');
 s = sprintf('%.2f%%', data.total_cost);
+set(textHandle, 'String', s);
+
+textHandle = findobj('Tag', 'text_sup_day');
+s = sprintf('%.2f%%', data.day_sup);
+set(textHandle, 'String', s);
+
+textHandle = findobj('Tag', 'text_earn_day');
+s = sprintf('%.2f%%', data.day_earn);
+set(textHandle, 'String', s);
+
+textHandle = findobj('Tag', 'text_need_day');
+s = sprintf('%.2f%%', data.day_need);
+set(textHandle, 'String', s);
+
+textHandle = findobj('Tag', 'text_cost_day');
+s = sprintf('%.2f%%', data.day_cost);
 set(textHandle, 'String', s);
