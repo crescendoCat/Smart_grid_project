@@ -140,22 +140,25 @@ now_display_hour = 5;
 [data] = computeDataFromResult(Result, now_display_hour);
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
-title(axesHandle, 'Supply');
+title(axesHandle, 'Supply', 'FontSize', 24);
 disp(axesHandle);
 X = (1:24);
 dh1 = plot(axesHandle, X, data.total_gen_data);
-xlabel(axesHandle, 'Hour');
-ylabel(axesHandle, 'kW');
+xlim(axesHandle, [0, 25]);
+xticks(axesHandle, linspace(0, 24, 4));
+xlabel(axesHandle, 'Hour', 'FontSize', 20);
+ylabel(axesHandle, 'kW', 'FontSize', 20);
 
 % Draw the graph of total power demended.
 axesHandle = findobj('Tag', 'axes_total_dem');
-title(axesHandle, 'Demand')
+title(axesHandle, 'Demand', 'FontSize', 24)
 X = (1:24);
 
 dh2 = plot(axesHandle, X, data.total_dem_data);
-xlabel(axesHandle, 'Hour');
-ylabel(axesHandle, 'kW');
-legend(dh2(buy_num+1), {'Total Supply'}, 'boxoff');
+xlim(axesHandle, [0, 25]);
+xticks(axesHandle, linspace(0, 24, 4));
+xlabel(axesHandle, 'Hour', 'FontSize', 20);
+ylabel(axesHandle, 'kW', 'FontSize', 20);
 plant_num = size(Result.sup_price_Random, 2);
 
 %axesHandle = findobj('Tag', 'axes16');
@@ -163,66 +166,74 @@ plant_num = size(Result.sup_price_Random, 2);
 %h3 = plot(axesHandle, )
 pos_width = 0.680;
 pos_height = 0.1200;
-
 axesHandle = findobj('Tag', 'axes10');
 subplot(axesHandle);
-ax1 = subplot(4, 1, 1);
+ax1 = subplot( 4, 1, 1);
 pos = get(ax1, 'Position');
-pos(3:4) = [pos_width pos_height];
+pos(3:4) = [0.845 pos_height];
+pos(1) = pos(1)-0.025;
 set(ax1, 'Position', pos);
-h1 = bar(ax1, data.plants_sup_growth_rate, 'FaceColor','flat');
-ylim(ax1, [-150, 150]);
+ax1.FontSize = 15;
+h1 = bar(ax1, data.sup_pricing, 'FaceColor','flat');
+ylim(ax1, [0, 10]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax1, 'Suppliers', 'FontSize', 11);
-ylabel(ax1, 'Percentage', 'FontSize', 11);
-title(ax1, 'Supply Growth', 'FontSize', 12);
-t1 = labelBar(h1, data.plants_sup_growth_rate);
-% Make Left bars first in list so that the kth bar is made up of the kth
-% column of data.
+xticks(ax1, linspace(1, 19, 10));
+xlabel(ax1, 'Suppliers', 'FontSize', 18);
+ylabel(ax1, 'NTD/kWh', 'FontSize', 18);
+title(ax1, 'Pricing', 'FontSize', 20);
+legend(ax1, {'RL', 'Random'}, 'Location', 'eastoutside', 'FontSize', 15);
+legend(ax1, 'boxoff');
+%labelBar(h1(1), data.sup_pricing(:, 1), -0.35);
+%labelBar(h1(2), data.sup_pricing(:, 2));
 
-ax2 = subplot( 4, 1, 2);
+ax2 = subplot(4, 1, 2);
 pos = get(ax2, 'Position');
 pos(3:4) = [pos_width pos_height];
+pos(1) = pos(1)-0.025;
 set(ax2, 'Position', pos);
 h2 = bar(ax2, data.plants_earn_growth_rate, 'FaceColor','flat');
-
 ylim(ax2, [-150, 150]);
+xticks(ax2, linspace(1, 19, 10));
 %legend(axesHandle, 'boxoff');
-xlabel(ax2, 'Suppliers', 'FontSize', 11);
-ylabel(ax2, 'Percentage', 'FontSize', 11);
-title(ax2, 'Income Growth', 'FontSize', 12);
+xlabel(ax2, 'Suppliers', 'FontSize', 18);
+ylabel(ax2, 'Percentage', 'FontSize', 18);
+title(ax2, 'Income Growth', 'FontSize', 20);
 t2 = labelBar(h2, data.plants_earn_growth_rate);
 
+
+
 ax3 = subplot( 4, 1, 3);
-pos = get(ax3, 'Position')
-pos(3:4) = [pos_width pos_height];
-set(ax3, 'Position',pos);
-h3 = bar(ax3, data.users_need_growth_rate);
-h3.FaceColor = 'flat';
-ylim(ax3, [-150, 150]);
+pos = get(ax3, 'Position');
+pos = [pos(1)-0.025 pos(2)-0.05 0.845 pos_height];
+set(ax3, 'Position', pos);
+h3 = bar(ax3, data.usr_pricing, 'FaceColor','flat');
 %legend(axesHandle, 'boxoff');
-xlabel(ax3, 'Power users', 'FontSize', 11);
-ylabel(ax3, 'Percentage', 'FontSize', 11);
-title(ax3, 'Demand Sufficiency Growth', 'FontSize', 12);
-t3 = labelBar(h3, data.users_need_growth_rate);
+ylim(ax3, [0, 10]);
+xticks(ax3, linspace(1, 3, 3));
+xlabel(ax3, 'Power Users', 'FontSize', 18);
+ylabel(ax3, 'NTD/kWh', 'FontSize', 18);
+title(ax3, 'Pricing', 'FontSize', 20);
+legend(ax3, {'RL', 'Random'}, 'Location', 'eastoutside', 'FontSize', 15);
+legend(ax3, 'boxoff');
+
 
 ax4 = subplot(4, 1, 4);
 pos = get(ax4, 'Position');
-pos(3:4) = [pos_width pos_height];
+pos = [pos(1)-0.025 pos(2)-0.05 pos_width pos_height];
 set(ax4, 'Position', pos);
 h4 = bar(ax4, data.users_cost_growth_rate, 'FaceColor','flat');
 ylim(ax4, [-150, 150]);
 %legend(axesHandle, 'boxoff');
-xlabel(ax4, 'Power users', 'FontSize', 11);
-ylabel(ax4, 'Percentage', 'FontSize', 11);
-title(ax4, 'Saving Rate', 'FontSize', 12);
+xlabel(ax4, 'Power users', 'FontSize', 18);
+ylabel(ax4, 'Percentage', 'FontSize', 18);
+title(ax4, 'Saving Rate', 'FontSize', 20);
 t4 = labelBar(h4, data.users_cost_growth_rate);
 
 global handlers;
-handlers = containers.Map({'sup_rate' 'earn_rate' 'need_rate' 'cost_rate' 'total_gen' 'total_dem'...
-    'sup_t' 'earn_t' 'need_t' 'cost_t'}, ... 
+handlers = containers.Map({'sup_price' 'earn_rate' 'usr_price' 'cost_rate' 'total_gen' 'total_dem'...
+    'earn_t' 'cost_t'}, ... 
     {h1, h2, h3, h4, dh1, dh2, ...
-    t1, t2, t3, t4});
+    t2, t4});
 update_graph_data(handles);
 
 % Update handles structure
@@ -283,7 +294,7 @@ function data = computeDataFromResult(Result, now_display_hour)
     global buy_num
     usr_cst_Rand = squeeze(Result.usr_actual_get_Random(day, now_display_hour, :));
     if(size(usr_cst_Rand, 2) ~= buy_num)
-        usr_cst_Rand = usr_cst_Rand'
+        usr_cst_Rand = usr_cst_Rand';
     end
     
     total_user_cost_Rand = usr_cst_Rand .* ...
@@ -291,7 +302,7 @@ function data = computeDataFromResult(Result, now_display_hour)
     
     usr_cst_RL = squeeze(Result.usr_actual_get_RL(day, now_display_hour, :));
     if(size(usr_cst_RL, 2) ~= buy_num)
-        usr_cst_RL = usr_cst_RL'
+        usr_cst_RL = usr_cst_RL';
     end
     
     total_user_cost_RL = usr_cst_RL .* ...
@@ -301,7 +312,7 @@ function data = computeDataFromResult(Result, now_display_hour)
     %total_user_cost_RL - total_user_cost_Rand
     %total_user_cost_Rand
     users_cost_growth_rate = postProcessBarData(users_cost_growth_rate);
-    users_cost_growth_rate = users_cost_growth_rate*-100
+    users_cost_growth_rate = users_cost_growth_rate*-100;
     total_cost_gRate = sum(total_user_cost_RL - total_user_cost_Rand) / sum(total_user_cost_Rand) * -100;
     %===============================================day avg%
     diff = (end_time-start_time+1);
@@ -368,12 +379,16 @@ function data = computeDataFromResult(Result, now_display_hour)
     %sum(total_user_cost_Rand)
 
     total_gen_data = squeeze(Result.sup_ideal_supply(day, :, :));
-    data = [squeeze(Result.usr_ideal_need(day, :, :)) sum(Result.sup_ideal_supply(day, :, :), 3)'];
+    data = squeeze(Result.usr_ideal_need(day, :, :));
     
     data = struct('plants_sup_growth_rate', plants_sup_growth_rate, ...
         'plants_earn_growth_rate', plants_earn_growth_rate, ...
         'users_need_growth_rate', users_need_growth_rate, ...
         'users_cost_growth_rate', users_cost_growth_rate, ...
+        'sup_pricing',  [Result.sup_price_RL(start_data_idx + now_display_hour - 1, :)' ...
+                         Result.sup_price_Random(start_data_idx + now_display_hour - 1, :)'], ...
+        'usr_pricing',  [Result.usr_price_RL(start_data_idx + now_display_hour - 1, :)' ...
+                         Result.usr_price_Random(start_data_idx + now_display_hour - 1, :)'], ...
         'total_gen_data', total_gen_data, ...
         'total_dem_data', data, ...
         'total_sup', total_sup_gRate, 'total_earn', total_earn_gRate, ...
@@ -385,16 +400,29 @@ function data = computeDataFromResult(Result, now_display_hour)
         'day_sup', day_total_sup_gRate, 'day_earn', day_total_earn_gRate, ...
         'day_need', day_total_need_gRate, 'day_cost', day_total_cost_gRate);
 
-function tlist = labelBar(h, labels)
-    str = []
-    for i=1:numel(h.YData)
-        str = [str string(sprintf('%3.0f', labels(i)))]
+function tlist = labelBar(h, labels, xPad, yPad)
+    if nargin <= 2
+        xPad = 0;
     end
-    tlist = text(h.XData, h.YData, str, 'HorizontalAlignment','center', 'VerticalAlignment','bottom');
+    if nargin <= 3
+        yPad = 0;
+    end
+    str = [];
+    for i=1:numel(h.YData)
+        str = [str string(sprintf('%3.0f', labels(i)))];
+    end
+    tlist = text(h.XData + xPad, h.YData + yPad, str, 'HorizontalAlignment','center', 'VerticalAlignment','bottom');
     
     
     
-function tlist = updateBarLabel(h, tlist, labels)
+function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
+    if nargin <= 3
+        xPad = 0;
+    end
+    if nargin <= 4
+        yPad = 0;
+    end
+        
     for i=1:numel(h.YData)
         
         if h.YData(i) < 0
@@ -408,14 +436,14 @@ function tlist = updateBarLabel(h, tlist, labels)
         elseif y <= -160
             y = -160;
         end
-        tlist(i).Position = [h.XData(i), y];
+        tlist(i).Position = [h.XData(i) + xPad, y + yPad];
         tlist(i).String = sprintf('%3.0f', labels(1, i));
     end
 
     
     
 function out = computeCData(list)
-    len = max(size(list))
+    len = max(size(list));
     out = repmat([0 0.4470 0.7410], len, 1);
     out((list < 0), :) = repmat([1 0 0], sum(list < 0), 1);
 
@@ -540,21 +568,29 @@ day = round(get(handles.slider2, 'Value'));
 
 now_display_hour = round(get(handles.slider1, 'Value')) - start_time+1;
 [data] = computeDataFromResult(Result, now_display_hour);
-set(handlers('sup_rate'), 'ydata', data.plants_sup_growth_rate);
-updateBarLabel(handlers('sup_rate'), handlers('sup_t'), data.plants_sup_growth_rate);
+b = handlers('sup_price');
+set(b(1), 'ydata', data.sup_pricing(:, 1));
+set(b(2), 'ydata', data.sup_pricing(:, 2));
+set(b(1), 'cdata', 4);
+set(b(2), 'cdata', 5);
+%updateBarLabel(handlers('sup_rate'), handlers('sup_t'), data.plants_sup_growth_rate);
 
 set(handlers('earn_rate'), 'ydata', data.plants_earn_growth_rate);
 updateBarLabel(handlers('earn_rate'), handlers('earn_t'), data.plants_earn_growth_rate);
 
-set(handlers('need_rate'), 'ydata', data.users_need_growth_rate);
-updateBarLabel(handlers('need_rate'), handlers('need_t'), data.users_need_growth_rate);
+b = handlers('usr_price');
+set(b(1), 'ydata', data.usr_pricing(:, 1));
+set(b(2), 'ydata', data.usr_pricing(:, 2));
+set(b(1), 'cdata', 4);
+set(b(2), 'cdata', 5);
+%updateBarLabel(handlers('need_rate'), handlers('need_t'), data.users_need_growth_rate);
 
 set(handlers('cost_rate'), 'ydata', data.users_cost_growth_rate);
 updateBarLabel(handlers('cost_rate'), handlers('cost_t'), data.users_cost_growth_rate);
 
-set(handlers('sup_rate'), 'cdata', computeCData(data.plants_sup_growth_rate));
+%set(handlers('sup_rate'), 'cdata', computeCData(data.plants_sup_growth_rate));
 set(handlers('earn_rate'), 'cdata', computeCData(data.plants_earn_growth_rate));
-set(handlers('need_rate'), 'cdata', computeCData(data.users_need_growth_rate));
+%set(handlers('need_rate'), 'cdata', computeCData(data.users_need_growth_rate));
 set(handlers('cost_rate'), 'cdata', computeCData(data.users_cost_growth_rate));
 
 p = handlers('total_gen');
@@ -563,7 +599,7 @@ for i=1:plant_num
 end
 
 p = handlers('total_dem');
-for i=1:buy_num+1
+for i=1:buy_num
     set(p(i), 'ydata', data.total_dem_data(:, i));
 end
 
@@ -577,32 +613,16 @@ textHandle = findobj('Tag', 'text_now_day');
 s = sprintf('%d', day);
 set(textHandle, 'String', s);
 
-textHandle = findobj('Tag', 'text_sup');
-s = sprintf('%.2f%%', data.total_sup);
-set(textHandle, 'String', s);
-
 textHandle = findobj('Tag', 'text_earn');
 s = sprintf('%.2f%%', data.total_earn);
-set(textHandle, 'String', s);
-
-textHandle = findobj('Tag', 'text_need');
-s = sprintf('%.2f%%', data.total_need);
 set(textHandle, 'String', s);
 
 textHandle = findobj('Tag', 'text_cost');
 s = sprintf('%.2f%%', data.total_cost);
 set(textHandle, 'String', s);
 
-textHandle = findobj('Tag', 'text_sup_day');
-s = sprintf('%.2f%%', data.day_sup);
-set(textHandle, 'String', s);
-
 textHandle = findobj('Tag', 'text_earn_day');
 s = sprintf('%.2f%%', data.day_earn);
-set(textHandle, 'String', s);
-
-textHandle = findobj('Tag', 'text_need_day');
-s = sprintf('%.2f%%', data.day_need);
 set(textHandle, 'String', s);
 
 textHandle = findobj('Tag', 'text_cost_day');
