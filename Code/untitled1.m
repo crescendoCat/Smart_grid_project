@@ -137,7 +137,7 @@ day = 4;
 
  
 now_display_hour = 5;
-[data] = computeDataFromResult(Result, now_display_hour);
+data = computeDataFromResult(Result, now_display_hour);
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
 title(axesHandle, 'Supply', 'FontSize', 24);
@@ -188,7 +188,7 @@ legend(ax1, 'boxoff');
 
 ax2 = subplot(4, 1, 2);
 pos = get(ax2, 'Position');
-pos(3:4) = [pos_width pos_height];
+pos(2:4) = [pos(2) - 0.015 pos_width pos_height];
 pos(1) = pos(1)-0.025;
 set(ax2, 'Position', pos);
 h2 = bar(ax2, data.plants_earn_growth_rate, 'FaceColor','flat');
@@ -204,7 +204,7 @@ t2 = labelBar(h2, data.plants_earn_growth_rate);
 
 ax3 = subplot( 4, 1, 3);
 pos = get(ax3, 'Position');
-pos = [pos(1)-0.025 pos(2)-0.05 0.845 pos_height];
+pos = [pos(1)-0.025 pos(2)-0.035 0.845 pos_height];
 set(ax3, 'Position', pos);
 h3 = bar(ax3, data.usr_pricing, 'FaceColor','flat');
 %legend(axesHandle, 'boxoff');
@@ -424,7 +424,7 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
     end
         
     for i=1:numel(h.YData)
-        
+        % Adjusting the y position of the label
         if h.YData(i) < 0
             y = h.YData(i) - 60;
         else
@@ -433,8 +433,8 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
         
         if y >= 90
             y = 90;
-        elseif y <= -160
-            y = -160;
+        elseif y <= -150
+            y = -150;
         end
         tlist(i).Position = [h.XData(i) + xPad, y + yPad];
         tlist(i).String = sprintf('%3.0f', labels(1, i));
