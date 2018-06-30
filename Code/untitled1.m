@@ -140,10 +140,10 @@ now_display_hour = 5;
 data = computeDataFromResult(Result, now_display_hour);
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
-title(axesHandle, 'Supply', 'FontSize', 24);
 disp(axesHandle);
 X = (1:24);
 dh1 = plot(axesHandle, X, data.total_gen_data);
+title(axesHandle, 'Supply', 'FontSize', 24);
 xlim(axesHandle, [0, 25]);
 xticks(axesHandle, linspace(0, 24, 4));
 xlabel(axesHandle, 'Hour', 'FontSize', 20);
@@ -151,10 +151,10 @@ ylabel(axesHandle, 'kW', 'FontSize', 20);
 
 % Draw the graph of total power demended.
 axesHandle = findobj('Tag', 'axes_total_dem');
-title(axesHandle, 'Demand', 'FontSize', 24)
 X = (1:24);
 
 dh2 = plot(axesHandle, X, data.total_dem_data);
+title(axesHandle, 'Demand', 'FontSize', 24)
 xlim(axesHandle, [0, 25]);
 xticks(axesHandle, linspace(0, 24, 4));
 xlabel(axesHandle, 'Hour', 'FontSize', 20);
