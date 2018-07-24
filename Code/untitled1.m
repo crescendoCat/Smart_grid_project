@@ -22,7 +22,7 @@ function varargout = untitled1(varargin)
 
 % Edit the above text to modify the response to help untitled1
 
-% Last Modified by GUIDE v2.5 26-Jun-2018 03:26:59
+% Last Modified by GUIDE v2.5 24-Jul-2018 08:03:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,83 +61,40 @@ global buy_num;
 global start_time;
 global Result;
 global day;
+global hour;
 global end_time;
+global plants_data_base;
+global total_power_dem;
 start_time = 7;
 end_time = 18;
-buy_num = 3;
-day = 4;
+day = 1;
+hour = 1;
 
 
     warning off;
 
-    phase = 'test';
-    update_method = 'R-SMART';
-    update_method_QL = 'Q-learning';
-    SAVE_FLAG = 1;
-    SAVE_PATH = '../Result';
-    quoted_price_range = [1 8];
-    buy_price_range = [3 10];
-    supply_range = [0 500];
-    demand_range = [0 500];
-    % Set up parameters
-    % Best: lr = 0.001, beta=0.01
-    lr = 0.001;
-    beta = 0.01;
-    eta = 0.9;
-    ITERMAX = 50;
-    sup_model = strcat('../Model/sup_Q_factor_', update_method, '_iter_', int2str(ITERMAX), '.mat');
-    usr_model = strcat('../Model/usr_Q_factor_', update_method, '_iter_', int2str(ITERMAX), '.mat');
-    sup_model_QL = strcat('../Model/sup_Q_factor_', update_method_QL, '_iter_', int2str(ITERMAX), '.mat');
-    usr_model_QL = strcat('../Model/usr_Q_factor_', update_method_QL, '_iter_', int2str(ITERMAX), '.mat');
-    sup_model_fix = strcat('../Model/sup_Q_factor_fix_qp_iter_', int2str(ITERMAX), '.mat');
-    usr_model_fix = strcat('../Model/usr_Q_factor_fix_qp_iter_', int2str(ITERMAX), '.mat');
 
-    if strcmp(phase,'train')
-        % Training phase
-        % Define the path of training data 
-        DATA_PATH = '../Data/Supplier/train/';
-
-        fprintf('Training with R-SMART\n');
-        train(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-               demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
-               usr_model);
-
-        fprintf('Training with basic Q-learning\n');
-        train(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-               demand_range, update_method_QL, lr, beta, eta, ITERMAX, sup_model_QL, ...
-               usr_model_QL);
-
-        fprintf('Training with fix quoted price\n');
-        train(DATA_PATH, [quoted_price_range(1) quoted_price_range(1)], ...
-               buy_price_range, supply_range, demand_range, update_method, lr, ...
-               beta, eta, ITERMAX, sup_model_fix, usr_model_fix);
-
-
-    elseif strcmp(phase, 'test')
-        % Testing phase
-        % Define the test data path
-        DATA_PATH = '../Data/Supplier/test/';
-
-        [Result] = test(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-            demand_range, sup_model, usr_model);
-
-        %[Result_Q_Learning] = test(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-        %    demand_range, sup_model_QL, usr_model_QL);
-
-        %[Result_fix] = test(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
-        %    demand_range, sup_model_fix, usr_model_fix);
-
-        day_num = 10;
-        % Draw the result
-        % draw_result(Result, Result_Q_learning, Result_fix, day_num, quoted_price_range(2), ...
-        %    buy_price_range(2), buy_price_range(1), SAVE_FLAG, SAVE_PATH);
-    else
-        error('[ERROR] Undefined phase, please check your argument.');
-    end    
-
- 
+DATA_PATH = '../Data/Supplier/test/';
+[plants_data_base, total_power_dem, plant_num, buy_num, day_num] = dataloader(DATA_PATH);
+Result = struct('actual_supply_RL', zeros(day_num, 12, plant_num),...
+                'actual_supply_Random', zeros(day_num, 12, plant_num), ...
+                'sup_price_RL', zeros(day_num, 12, plant_num), ...
+                'usr_price_RL', zeros(day_num, 12, buy_num), ...
+                'sup_price_Random', zeros(day_num, 12, plant_num), ...
+                'usr_price_Random', zeros(day_num, 12, buy_num), ...
+                'sup_ideal_supply', zeros(day_num, 24, plant_num), ...
+                'usr_ideal_need', zeros(day_num, 24, buy_num), ...
+                'sup_actual_supply_RL', zeros(day_num, 12, plant_num), ...
+                'usr_actual_get_RL', zeros(day_num, 12, buy_num), ...
+                'sup_actual_supply_Random', zeros(day_num, 12, plant_num), ...
+                'usr_actual_get_Random', zeros(day_num, 12, buy_num));
+%[Result_hour] = testSingleHour(squeeze(plants_data_base(1, 12, :)), ...
+%        squeeze(total_power_dem(1, 12, :)), ...
+%        quoted_price_range, buy_price_range, supply_range, ...
+%        demand_range, sup_model, usr_model);
+%Result = fetchOutcomeToResult(Result, Result_hour, day, hour);
 now_display_hour = 5;
-[data] = computeDataFromResult(Result, now_display_hour);
+[data] = computeDataFromResult(Result, day, now_display_hour);
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
 title(axesHandle, 'Supply', 'FontSize', 24);
@@ -159,7 +116,6 @@ xlim(axesHandle, [0, 25]);
 xticks(axesHandle, linspace(0, 24, 4));
 xlabel(axesHandle, 'Hour', 'FontSize', 20);
 ylabel(axesHandle, 'kW', 'FontSize', 20);
-plant_num = size(Result.sup_price_Random, 2);
 
 %axesHandle = findobj('Tag', 'axes16');
 %[data] = computeDataFromResult(Result, 1:12);
@@ -234,7 +190,7 @@ handlers = containers.Map({'sup_price' 'earn_rate' 'usr_price' 'cost_rate' 'tota
     'earn_t' 'cost_t'}, ... 
     {h1, h2, h3, h4, dh1, dh2, ...
     t2, t4});
-update_graph_data(handles);
+%update_graph_data(handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -245,11 +201,10 @@ function out = postProcessBarData(list)
     list(isnan(list)) = 0;
     out = list;
 
-function data = computeDataFromResult(Result, now_display_hour)
-    global day
-    global end_time
-    global start_time
-    global plant_num
+function data = computeDataFromResult(Result, day, now_display_hour)
+    global end_time;
+    global start_time;
+    global plant_num;
     
     start_data_idx = (day-1)*(end_time-start_time+1) + 1;
 
@@ -268,14 +223,14 @@ function data = computeDataFromResult(Result, now_display_hour)
         act_sup_Rand = act_sup_Rand';
     end
     total_plants_earn_Rand = act_sup_Rand .* ...
-        Result.sup_price_Random(start_data_idx + now_display_hour - 1, :);
+        squeeze(Result.sup_price_Random(day, now_display_hour, :))';
 
     act_sup_RL = squeeze(Result.sup_actual_supply_RL(day, now_display_hour, :));
     if(size(act_sup_RL, 2) ~= plant_num)
         act_sup_RL = act_sup_RL';
     end
     total_plants_earn_RL =act_sup_RL .* ...
-        Result.sup_price_RL(start_data_idx + now_display_hour - 1, :);
+        squeeze(Result.sup_price_RL(day, now_display_hour, :))';
 
     plants_earn_growth_rate = (total_plants_earn_RL - total_plants_earn_Rand) ./ (total_plants_earn_Rand + eps);
     plants_earn_growth_rate = postProcessBarData(plants_earn_growth_rate);
@@ -298,7 +253,7 @@ function data = computeDataFromResult(Result, now_display_hour)
     end
     
     total_user_cost_Rand = usr_cst_Rand .* ...
-        Result.usr_price_Random(start_data_idx + now_display_hour - 1, :);
+        squeeze(Result.usr_price_Random(day, now_display_hour, :))';
     
     usr_cst_RL = squeeze(Result.usr_actual_get_RL(day, now_display_hour, :));
     if(size(usr_cst_RL, 2) ~= buy_num)
@@ -306,7 +261,7 @@ function data = computeDataFromResult(Result, now_display_hour)
     end
     
     total_user_cost_RL = usr_cst_RL .* ...
-        Result.usr_price_RL(start_data_idx + now_display_hour - 1, :);
+        squeeze(Result.usr_price_RL(day, now_display_hour, :))';
 
     users_cost_growth_rate = (total_user_cost_RL - total_user_cost_Rand) ./ (total_user_cost_Rand);
     %total_user_cost_RL - total_user_cost_Rand
@@ -331,14 +286,14 @@ function data = computeDataFromResult(Result, now_display_hour)
         act_sup_Rand = act_sup_Rand';
     end
     day_plants_earn_Rand = act_sup_Rand .* ...
-        Result.sup_price_Random(start_data_idx + (1:diff) - 1, :);
+        squeeze(Result.sup_price_Random(day, 1:diff, :));
 
     act_sup_RL = squeeze(Result.sup_actual_supply_RL(day, 1:diff, :));
     if(size(act_sup_RL, 2) ~= plant_num)
         act_sup_RL = act_sup_RL';
     end
     day_plants_earn_RL =act_sup_RL .* ...
-        Result.sup_price_RL(start_data_idx + (1:diff) - 1, :);
+        squeeze(Result.sup_price_RL(day, 1:diff, :));
 
     day_earn_growth_rate = sum(day_plants_earn_RL - day_plants_earn_Rand, 1) ./ sum(day_plants_earn_Rand + eps, 1);
     day_earn_growth_rate = postProcessBarData(day_earn_growth_rate);
@@ -360,14 +315,14 @@ function data = computeDataFromResult(Result, now_display_hour)
         act_need_Rand = act_need_Rand';
     end
     day_users_cost_Rand = act_need_Rand .* ...
-        Result.usr_price_Random(start_data_idx + (1:diff) - 1, :);
+        squeeze(Result.usr_price_Random(day, 1:diff, :));
 
     act_need_RL = squeeze(Result.usr_actual_get_RL(day, 1:diff, :));
     if(size(act_need_RL, 2) ~= buy_num)
         act_need_RL = act_need_RL';
     end
     day_users_cost_RL =act_need_RL .* ...
-        Result.usr_price_RL(start_data_idx + (1:diff) - 1, :);
+        squeeze(Result.usr_price_RL(day, 1:diff, :));
 
     day_cost_growth_rate = sum(day_users_cost_RL - day_users_cost_Rand, 1) ./ sum(day_users_cost_Rand + eps, 1);
     day_cost_growth_rate = postProcessBarData(day_cost_growth_rate);
@@ -385,10 +340,10 @@ function data = computeDataFromResult(Result, now_display_hour)
         'plants_earn_growth_rate', plants_earn_growth_rate, ...
         'users_need_growth_rate', users_need_growth_rate, ...
         'users_cost_growth_rate', users_cost_growth_rate, ...
-        'sup_pricing',  [Result.sup_price_RL(start_data_idx + now_display_hour - 1, :)' ...
-                         Result.sup_price_Random(start_data_idx + now_display_hour - 1, :)'], ...
-        'usr_pricing',  [Result.usr_price_RL(start_data_idx + now_display_hour - 1, :)' ...
-                         Result.usr_price_Random(start_data_idx + now_display_hour - 1, :)'], ...
+        'sup_pricing',  [squeeze(Result.sup_price_RL(day, now_display_hour, :)) ...
+                         squeeze(Result.sup_price_Random(day, now_display_hour, :))], ...
+        'usr_pricing',  [squeeze(Result.usr_price_RL(day, now_display_hour, :)) ...
+                         squeeze(Result.usr_price_Random(day, now_display_hour, :))], ...
         'total_gen_data', total_gen_data, ...
         'total_dem_data', data, ...
         'total_sup', total_sup_gRate, 'total_earn', total_earn_gRate, ...
@@ -561,13 +516,12 @@ global buy_num;
 global handlers;
 global start_time;
 global Result;
-global day;
 global end_time;
 
 day = round(get(handles.slider2, 'Value'));
 
 now_display_hour = round(get(handles.slider1, 'Value')) - start_time+1;
-[data] = computeDataFromResult(Result, now_display_hour);
+[data] = computeDataFromResult(Result, day, now_display_hour);
 b = handlers('sup_price');
 set(b(1), 'ydata', data.sup_pricing(:, 1));
 set(b(2), 'ydata', data.sup_pricing(:, 2));
@@ -628,3 +582,177 @@ set(textHandle, 'String', s);
 textHandle = findobj('Tag', 'text_cost_day');
 s = sprintf('%.2f%%', data.day_cost);
 set(textHandle, 'String', s);
+
+function Result = testSingleHour(supply, demand, quoted_range, buy_range, supply_range, ...
+    demand_range, sup_model, usr_model)
+quoted_price_ub = quoted_range(2);
+quoted_price_lb = quoted_range(1);
+quoted_edges = quoted_price_lb:1:quoted_price_ub;
+
+% Discretize the supply state space => demand 
+demand_ub = supply_range(2);
+demand_lb = supply_range(1);
+demand_state_edges = demand_lb:5:demand_ub;
+demand_state_num = size(demand_state_edges,2) - 1;
+
+% For User
+% Discretize the action space => buy_price
+buy_price_ub = buy_range(2);
+buy_price_lb = buy_range(1);
+buy_edges = buy_price_lb:1:buy_price_ub;
+
+% Discretize the demand state space => supply
+supply_ub = demand_range(2);
+supply_lb = demand_range(1);
+supply_state_edges = supply_lb:5:supply_ub;
+supply_state_num = size(supply_state_edges,2) - 1;
+
+% Load in the Q-factor table
+load(sup_model, 'sup_Q_factor');
+load(usr_model, 'usr_Q_factor');
+
+[a, b] = size(supply);
+if a ~= 1
+    if b ~= 1
+        error('The supply must be a one dimension matrix');
+    end
+    supply = supply(:)';
+    plant_num = a;
+else
+    plant_num = b;
+end
+[a, b] = size(demand);
+if a ~= 1
+    if b ~= 1
+        error('The demand must be a one dimension matrix');
+    end
+    demand = demand(:)';
+    buy_num = a;
+else
+    buy_num = b;
+end
+
+% Variables for linear programming
+A = eye(plant_num+buy_num);
+Aeq = [ones(1 ,buy_num) -1*ones(1, plant_num)];
+beq = 0;
+
+% Define a data structure for plotting the result
+Result = struct('actual_supply_RL', [], 'actual_supply_Random', [], ...
+                'sup_price_RL', [], 'usr_price_RL', [], ...
+                'sup_price_Random', [], 'usr_price_Random', [], ...
+                'sup_ideal_supply', supply, ...
+                'usr_ideal_need', demand, ...
+                'sup_actual_supply_RL', zeros(plant_num, 1), ...
+                'usr_actual_get_RL', zeros(buy_num, 1), ...
+                'sup_actual_supply_Random', zeros(plant_num, 1), ...
+                'usr_actual_get_Random', zeros(buy_num, 1));
+
+    for use_RL = 0:1
+        if use_RL 
+            % Get supplier current state
+            sup_cur_state = discretize(supply(:), supply_state_edges);
+            total_sup_cur_state = discretize(sum(supply(:)), supply_state_edges);
+            total_dem_cur_state = discretize(sum(demand(:)), demand_state_edges);
+            sup_cur = total_dem_cur_state * supply_state_num + sup_cur_state;
+
+            quoted_price = zeros(1, plant_num);
+            buy_price = zeros(1, buy_num);
+            for i = 1:plant_num
+                % Get the index of the max Q-value in current state, that is
+                % the price to quote
+                [~, quoted_price(i)] = max(sup_Q_factor(i, sup_cur(i), :));
+                quoted_price(i) = quoted_price(i)+quoted_price_lb-1;
+            end
+            % Get user current state
+            usr_cur_state = discretize(supply(:), demand_state_edges);
+            usr_cur = total_sup_cur_state * demand_state_num + usr_cur_state;
+            for i = 1:buy_num
+                [~, buy_price(i)] = max(usr_Q_factor(i, usr_cur(i), :)); 
+                buy_price(i) = buy_price(i)+buy_price_lb-1;
+            end
+
+            % Store the price into result
+            Result.sup_price_RL = quoted_price;
+            Result.usr_price_RL = buy_price;                
+        else
+            quoted_price = randi([quoted_price_lb quoted_price_ub], 1, plant_num);
+            buy_price = randi([buy_price_lb buy_price_ub], 1, buy_num);
+
+            % Store the price into result
+            Result.sup_price_Random = quoted_price;
+            Result.usr_price_Random = buy_price; 
+        end
+
+        f = [-1 * buy_price quoted_price];
+        b = [demand supply];
+
+        [x, ~, ~, ~] = linprog(f, A, b, Aeq, beq, ...
+            zeros(1, plant_num + buy_num), 1000 * ones(1, plant_num + buy_num), [], ...
+            optimset('Display','none'));
+
+        if use_RL
+            Result.sup_actual_supply_RL(:) = x(buy_num+1:plant_num+buy_num);
+            Result.usr_actual_get_RL(:) = x(1:buy_num);
+        else
+            Result.sup_actual_supply_Random(:) = x(buy_num+1:plant_num+buy_num);
+            Result.usr_actual_get_Random(:) = x(1:buy_num);
+        end
+    end
+
+function Result = fetchOutcomeToResult(Result, Result_hour, day, hour)
+    Result.sup_actual_supply_RL(day, hour, :) = Result_hour.sup_actual_supply_RL(:);
+    Result.sup_actual_supply_Random(day, hour, :) = Result_hour.sup_actual_supply_Random(:);
+    Result.sup_price_RL(day, hour, :) = Result_hour.sup_price_RL(:);
+    Result.usr_price_RL(day, hour, :) = Result_hour.usr_price_RL(:);
+    Result.sup_price_Random(day, hour, :) = Result_hour.sup_price_Random(:);
+    Result.usr_price_Random(day, hour, :) = Result_hour.usr_price_Random(:);
+    Result.sup_ideal_supply(day, hour, :) = Result_hour.sup_ideal_supply(:);
+    Result.usr_ideal_need(day, hour, :) = Result_hour.usr_ideal_need(:);
+    Result.usr_actual_get_RL(day, hour, :) = Result_hour.usr_actual_get_RL(:);
+    Result.usr_actual_get_Random(day, hour, :) = Result_hour.usr_actual_get_Random(:);
+
+
+% --- Executes on button press in pushbutton_fetchdata.
+function pushbutton_fetchdata_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_fetchdata (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global plants_data_base;
+global total_power_dem;
+global day;
+global hour;
+global start_time;
+global end_time;
+global Result;
+hour = hour+1;
+if hour > end_time - start_time+1
+    hour = 1;
+    day = day+1;
+    if day > 10
+        day = 1;
+        hour = 1;
+    end
+end
+    phase = 'test';
+    update_method = 'R-SMART_iter_50';
+    update_method_QL = 'Q-learning';
+    SAVE_FLAG = 1;
+    SAVE_PATH = '../Result';
+    quoted_price_range = [1 8];
+    buy_price_range = [3 10];
+    supply_range = [0 500];
+    demand_range = [0 500];
+    sup_model = strcat(strcat('../Model/sup_Q_factor_', update_method), '.mat');
+    usr_model = strcat(strcat('../Model/usr_Q_factor_', update_method), '.mat');
+    sup_model_QL = strcat(strcat('../Model/sup_Q_factor_', update_method_QL), '.mat');
+    usr_model_QL = strcat(strcat('../Model/usr_Q_factor_', update_method_QL), '.mat');
+
+[Result_hour] = testSingleHour(squeeze(plants_data_base(day, hour+start_time-1, :)), ...
+        squeeze(total_power_dem(day, hour+start_time-1, :)), ...
+        quoted_price_range, buy_price_range, supply_range, ...
+        demand_range, sup_model, usr_model);
+Result = fetchOutcomeToResult(Result, Result_hour, day, hour);
+set(handles.slider2, 'Value', day);
+set(handles.slider1, 'Value', hour + start_time - 1);
+update_graph_data(handles);
