@@ -94,16 +94,15 @@ Result = struct('actual_supply_RL', zeros(day_num, 12, plant_num),...
 %        demand_range, sup_model, usr_model);
 %Result = fetchOutcomeToResult(Result, Result_hour, day, hour);
 now_display_hour = 5;
-<<<<<<< HEAD
+
 [data] = computeDataFromResult(Result, day, now_display_hour);
-=======
-data = computeDataFromResult(Result, now_display_hour);
->>>>>>> a0fea54cda901642c5940b64d297aef7235b25b2
+
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
 disp(axesHandle);
 X = (1:24);
 dh1 = plot(axesHandle, X, data.total_gen_data);
+title(axesHandle, 'Supply', 'FontSize', 24);
 xlim(axesHandle, [0, 25]);
 xticks(axesHandle, linspace(0, 24, 4));
 xlabel(axesHandle, 'Hour', 'FontSize', 20);
@@ -114,6 +113,7 @@ axesHandle = findobj('Tag', 'axes_total_dem');
 X = (1:24);
 
 dh2 = plot(axesHandle, X, data.total_dem_data);
+title(axesHandle, 'Demand', 'FontSize', 24)
 xlim(axesHandle, [0, 25]);
 xticks(axesHandle, linspace(0, 24, 4));
 xlabel(axesHandle, 'Hour', 'FontSize', 20);
@@ -162,6 +162,7 @@ t2 = labelBar(h2, data.plants_earn_growth_rate);
 
 ax3 = subplot( 4, 1, 3);
 pos = get(ax3, 'Position');
+pos = [pos(1)-0.025 pos(2)-0.035 0.845 pos_height];
 set(ax3, 'Position', pos);
 h3 = bar(ax3, data.usr_pricing, 'FaceColor','flat');
 %legend(axesHandle, 'boxoff');
@@ -380,6 +381,7 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
     end
         
     for i=1:numel(h.YData)
+        % Adjusting the y position of the label
         if h.YData(i) < 0
             y = h.YData(i) - 60;
         else
@@ -388,6 +390,8 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
         
         if y >= 90
             y = 90;
+        elseif y <= -150
+            y = -150;
         end
         tlist(i).Position = [h.XData(i) + xPad, y + yPad];
         tlist(i).String = sprintf('%3.0f', labels(1, i));
@@ -699,14 +703,15 @@ Result = struct('actual_supply_RL', [], 'actual_supply_Random', [], ...
     end
 
 function Result = fetchOutcomeToResult(Result, Result_hour, day, hour)
+    global start_time;
     Result.sup_actual_supply_RL(day, hour, :) = Result_hour.sup_actual_supply_RL(:);
     Result.sup_actual_supply_Random(day, hour, :) = Result_hour.sup_actual_supply_Random(:);
     Result.sup_price_RL(day, hour, :) = Result_hour.sup_price_RL(:);
     Result.usr_price_RL(day, hour, :) = Result_hour.usr_price_RL(:);
     Result.sup_price_Random(day, hour, :) = Result_hour.sup_price_Random(:);
     Result.usr_price_Random(day, hour, :) = Result_hour.usr_price_Random(:);
-    Result.sup_ideal_supply(day, hour, :) = Result_hour.sup_ideal_supply(:);
-    Result.usr_ideal_need(day, hour, :) = Result_hour.usr_ideal_need(:);
+    Result.sup_ideal_supply(day, hour+start_time-1, :) = Result_hour.sup_ideal_supply(:);
+    Result.usr_ideal_need(day, hour+start_time-1, :) = Result_hour.usr_ideal_need(:);
     Result.usr_actual_get_RL(day, hour, :) = Result_hour.usr_actual_get_RL(:);
     Result.usr_actual_get_Random(day, hour, :) = Result_hour.usr_actual_get_Random(:);
 
