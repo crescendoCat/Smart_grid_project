@@ -94,10 +94,13 @@ Result = struct('actual_supply_RL', zeros(day_num, 12, plant_num),...
 %        demand_range, sup_model, usr_model);
 %Result = fetchOutcomeToResult(Result, Result_hour, day, hour);
 now_display_hour = 5;
+<<<<<<< HEAD
 [data] = computeDataFromResult(Result, day, now_display_hour);
+=======
+data = computeDataFromResult(Result, now_display_hour);
+>>>>>>> a0fea54cda901642c5940b64d297aef7235b25b2
 % Draw the graph of total power generated.
 axesHandle = findobj('Tag', 'axes_total_gen');
-title(axesHandle, 'Supply', 'FontSize', 24);
 disp(axesHandle);
 X = (1:24);
 dh1 = plot(axesHandle, X, data.total_gen_data);
@@ -108,7 +111,6 @@ ylabel(axesHandle, 'kW', 'FontSize', 20);
 
 % Draw the graph of total power demended.
 axesHandle = findobj('Tag', 'axes_total_dem');
-title(axesHandle, 'Demand', 'FontSize', 24)
 X = (1:24);
 
 dh2 = plot(axesHandle, X, data.total_dem_data);
@@ -144,7 +146,7 @@ legend(ax1, 'boxoff');
 
 ax2 = subplot(4, 1, 2);
 pos = get(ax2, 'Position');
-pos(3:4) = [pos_width pos_height];
+pos(2:4) = [pos(2) - 0.015 pos_width pos_height];
 pos(1) = pos(1)-0.025;
 set(ax2, 'Position', pos);
 h2 = bar(ax2, data.plants_earn_growth_rate, 'FaceColor','flat');
@@ -160,7 +162,6 @@ t2 = labelBar(h2, data.plants_earn_growth_rate);
 
 ax3 = subplot( 4, 1, 3);
 pos = get(ax3, 'Position');
-pos = [pos(1)-0.025 pos(2)-0.05 0.845 pos_height];
 set(ax3, 'Position', pos);
 h3 = bar(ax3, data.usr_pricing, 'FaceColor','flat');
 %legend(axesHandle, 'boxoff');
@@ -379,7 +380,6 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
     end
         
     for i=1:numel(h.YData)
-        
         if h.YData(i) < 0
             y = h.YData(i) - 60;
         else
@@ -388,8 +388,6 @@ function tlist = updateBarLabel(h, tlist, labels, xPad, yPad)
         
         if y >= 90
             y = 90;
-        elseif y <= -160
-            y = -160;
         end
         tlist(i).Position = [h.XData(i) + xPad, y + yPad];
         tlist(i).String = sprintf('%3.0f', labels(1, i));
