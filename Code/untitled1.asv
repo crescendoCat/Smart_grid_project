@@ -429,9 +429,8 @@ function slider1_Callback(hObject, eventdata, handles)
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 global start_time;
 global day;
-global hour;
-hour = round(get(handles.slider1, 'Value')) - start_time+1;
-update_graph_data(handles, day, hour);
+now_display_hour = round(get(handles.slider1, 'Value')) - start_time+1;
+update_graph_data(handles, day, now_display_hour);
 
 % --- Executes during object creation, after setting all properties.
 function slider1_CreateFcn(hObject, eventdata, handles)
@@ -503,7 +502,6 @@ function slider2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-global day;
 day = round(get(handles.slider2, 'Value'));
 global hour;
 update_graph_data(handles, day, hour);
@@ -836,5 +834,4 @@ function pushbutton_stop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global T;
 stop(T);
-handles.pushbutton_stop.Enable = 'off';
-delete(instrfindall);
+handles.pushbutton+s

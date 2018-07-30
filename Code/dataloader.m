@@ -8,7 +8,7 @@ function [plants_data_base, total_power_dem, plant_num, buy_num, day_num] ...
 plants_day_dir = dir(DATA_PATH);
 plants_day_list = {};
 day_num = size(plants_day_dir, 1)-2;
-day_num = 10;
+day_num = 20;
 for i=3:size(plants_day_dir, 1)
     plants_day_list = [plants_day_list; strcat(DATA_PATH, plants_day_dir(i).name)];
 end

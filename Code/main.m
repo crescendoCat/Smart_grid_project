@@ -8,13 +8,13 @@ warning off;
 phase = 'train';
 update_method = 'R-SMART';
 update_method_QL = 'Q-learning';
-SAVE_FLAG = 0;
+SAVE_FLAG = 1;
 SAVE_PATH = '../Result';
 %SAVE_PATH = strcat('../Result/', update_method);
-quoted_price_range = [2 9];
-buy_price_range = [1 8];
-supply_range = [0 200];
-demand_range = [0 200];
+quoted_price_range = [1 8];
+buy_price_range = [3 10];
+supply_range = [0 500];
+demand_range = [0 500];
 sup_model = strcat(strcat('../Model/sup_Q_factor_', update_method), '.mat');
 usr_model = strcat(strcat('../Model/usr_Q_factor_', update_method), '.mat');
 sup_model_QL = strcat(strcat('../Model/sup_Q_factor_', update_method_QL), '.mat');
@@ -34,9 +34,9 @@ if strcmp(phase,'train')
     lr = 0.001;
     beta = 0.01;
     eta = 0.9;
-    ITERMAX = 1;
+    ITERMAX = 100;
 
-    train(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
+    train_origin(DATA_PATH, quoted_price_range, buy_price_range, supply_range, ...
            demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
            usr_model);
     %    demand_range, update_method, lr, beta, eta, ITERMAX, sup_model, ...
